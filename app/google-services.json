@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "285521332565",
+    "project_id": "lift-app-id",
+    "storage_bucket": "lift-app-id.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:285521332565:android:4c2cce0eb52d17e44207dc",
+        "android_client_info": {
+          "package_name": "com.example.liftapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDrC50iTgHAgXO9-B5I4HQOyRUtqOth2y8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

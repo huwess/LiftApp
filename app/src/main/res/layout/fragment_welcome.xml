@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".onboarding.welcomeFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:src="@drawable/background_onboarding"
+            android:contentDescription="Image of dumbbell and a planner"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/open_sans_bold"
+            android:gravity="center"
+            android:text="Start Your Journey With LIFT!"
+            android:textSize="38sp"
+            android:layout_marginHorizontal="20dp"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/open_sans_medium"
+            android:gravity="center"
+            android:text="Elevate your form for every rep with our Posture Detection and Strength Assessment."
+            android:layout_marginHorizontal="20dp"
+            android:layout_marginTop="10dp"
+            android:textSize="28sp" />
+    </LinearLayout>
+
+
+</FrameLayout>
