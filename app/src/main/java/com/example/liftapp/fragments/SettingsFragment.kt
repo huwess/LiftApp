@@ -37,9 +37,13 @@ class SettingsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         firebaseAuth = FirebaseAuth.getInstance()
 
-        fragmentSettingsBinding.signOut.setOnClickListener {
-            signOutUser()
+        fragmentSettingsBinding.navigationView.setNavigationItemSelectedListener{ menuItem ->
+            when(menuItem.itemId) {
+                R.id.signOut -> signOutUser()
+            }
+            true
         }
+
     }
     private fun signOutUser() {
         firebaseAuth.signOut()

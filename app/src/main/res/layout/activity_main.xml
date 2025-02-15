@@ -21,6 +21,7 @@
         android:layout_gravity="bottom"
         android:backgroundTint="@color/dark_gray"
         app:fabAlignmentMode="center"
+        app:fabCradleVerticalOffset="50dp"
         app:fabCradleMargin="10dp"
         app:fabCradleRoundedCornerRadius="50dp">
 
@@ -31,7 +32,10 @@
             android:layout_marginEnd="20dp"
             android:background="@android:color/transparent"
             app:labelVisibilityMode="labeled"
-            app:menu="@menu/bottom_menu" />
+            app:menu="@menu/bottom_menu"
+            app:itemTextColor="@color/bottom_nav_selector"
+            app:itemRippleColor="@color/white"
+            />
 
     </com.google.android.material.bottomappbar.BottomAppBar>
 

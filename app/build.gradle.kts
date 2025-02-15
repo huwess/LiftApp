@@ -54,6 +54,7 @@ dependencies {
 
     //Charts
     implementation(libs.mpandroidchart)
+    implementation(libs.firebase.database)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
