@@ -2,6 +2,9 @@ package com.example.liftapp
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -11,6 +14,8 @@ import com.example.liftapp.fragments.HomeFragment
 import com.example.liftapp.fragments.SettingsFragment
 import com.google.firebase.auth.FirebaseAuth
 import com.example.liftapp.PrefMnager
+import com.example.liftapp.helper.users.UserProfileHelper
+import com.example.liftapp.helper.users.UserViewModel
 
 class MainActivity : AppCompatActivity() {
 
@@ -18,6 +23,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var firebaseAuth: FirebaseAuth
 
     private lateinit var prefManager: PrefMnager
+
+    private lateinit var userProfileHelper: UserProfileHelper
+    private val userViewModel: UserViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,12 +47,17 @@ class MainActivity : AppCompatActivity() {
 //        }
         replaceFragment(HomeFragment())
 
+        userProfileHelper = UserProfileHelper()
         firebaseAuth = FirebaseAuth.getInstance()
         val currentUser = firebaseAuth.currentUser
+
         if (currentUser == null || !currentUser.isEmailVerified) {
             startActivity(Intent(this, SignInActivity::class.java))
             finish()
             return
+        } else {
+            userViewModel.setEmail(currentUser.email)
+            fetchUserData(currentUser.uid)
         }
 
 
@@ -64,6 +77,25 @@ class MainActivity : AppCompatActivity() {
 
 
     }
+    private fun fetchUserData(userId: String) {
+        Log.d("MainActivity", "Calling fetchUserData for userId: $userId")
+
+        userProfileHelper.fetchUserData(userId) { user ->
+            if (user != null) {
+                Log.d("MainActivity", "User data received: $user")
+
+                userViewModel.setName(user.name)
+                userViewModel.setAge(user.age)
+                userViewModel.setWeight(user.weight)
+                userViewModel.setGender(user.gender)
+                userViewModel.setUnit(user.unit)
+            } else {
+                Log.e("MainActivity", "User data is null")
+                Toast.makeText(this, "Failed to load user data", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
 
     private fun replaceFragment(fragment: Fragment) {
         supportFragmentManager.beginTransaction()
