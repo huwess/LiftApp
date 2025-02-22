@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@color/white"
-    tools:context=".fragments.SettingsFragment"
+    tools:context=".bottom_nav.SettingsFragment"
     android:paddingBottom="80dp">
 
 
@@ -92,51 +92,59 @@
                 app:layout_constraintStart_toStartOf="parent">
 
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:background="@drawable/rectangle"
                     android:gravity="center"
                     android:orientation="horizontal"
                     android:showDividers="middle"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent">
+                    app:layout_constraintStart_toStartOf="parent"
+                    android:layout_marginHorizontal="15dp">
 
                     <LinearLayout
-                        android:layout_width="50dp"
+                        android:layout_width="0dp"
+                        android:layout_weight="3"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
                         android:layout_marginStart="30dp"
                         android:gravity="center"
-                        android:orientation="vertical">
+                        android:orientation="vertical"
+                        android:layout_marginEnd="20dp">
 
                         <TextView
                             android:id="@+id/weight_TextView"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/open_sans_bold"
-                            android:text="72kg"
-                            android:textColor="@color/white" />
+                            android:text="172.1kg"
+                            android:textColor="@color/white"
+                            android:textSize="12sp"/>
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Weight"
-                            android:textColor="@color/white" />
+                            android:textColor="@color/white"
+                            android:textSize="12sp"/>
                     </LinearLayout>
 
-                    <TextView
-                        android:layout_width="1dp"
-                        android:layout_height="50sp"
-                        android:layout_marginLeft="30dp"
-                        android:layout_marginRight="50dp"
-                        android:background="@color/white" />
+                    <com.google.android.material.divider.MaterialDivider
+                        android:layout_width="2dp"
+                        android:layout_height="match_parent"
+                        app:dividerThickness="5dp"
+                        app:dividerColor="@color/white"/>
+
+
 
                     <LinearLayout
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
+                        android:layout_weight="4"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
                         android:gravity="center"
-                        android:orientation="vertical">
+                        android:orientation="vertical"
+                        android:layout_marginHorizontal="40dp">
 
                         <TextView
                             android:id="@+id/age_TextView"
@@ -144,43 +152,49 @@
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/open_sans_bold"
                             android:text="26"
-                            android:textColor="@color/white" />
+                            android:textColor="@color/white"
+                            android:textSize="14sp"/>
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Years Old"
-                            android:textColor="@color/white" />
+                            android:text="y/o"
+                            android:textColor="@color/white"
+                            android:textSize="12sp"/>
                     </LinearLayout>
 
-                    <TextView
-                        android:layout_width="1dp"
-                        android:layout_height="50sp"
-                        android:layout_marginLeft="50dp"
-                        android:layout_marginRight="30dp"
-                        android:background="@color/white" />
+                    <com.google.android.material.divider.MaterialDivider
+                        android:layout_width="2dp"
+                        android:layout_height="match_parent"
+                        app:dividerThickness="5dp"
+                        app:dividerColor="@color/white"/>
 
                     <LinearLayout
-                        android:layout_width="50dp"
+                        android:layout_width="0dp"
+                        android:layout_weight="3"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
-                        android:layout_marginRight="30dp"
+                        android:layout_marginRight="20dp"
                         android:gravity="center"
-                        android:orientation="vertical">
+                        android:orientation="vertical"
+                        android:layout_marginStart="20dp"
+                        android:layout_marginEnd="30dp">
 
                         <TextView
                             android:id="@+id/gender_TextView"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/open_sans_bold"
-                            android:text="M"
-                            android:textColor="@color/white" />
+                            android:text="Female"
+                            android:textColor="@color/white"
+                            android:textSize="14sp"/>
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Sex"
-                            android:textColor="@color/white" />
+                            android:textColor="@color/white"
+                            android:textSize="12sp"/>
                     </LinearLayout>
 
                 </LinearLayout>
@@ -195,6 +209,7 @@
                 android:orientation="vertical">
 
                 <com.google.android.material.navigation.NavigationView
+
                     android:id="@+id/navigation_view"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -211,7 +226,7 @@
                     android:layout_marginBottom="20dp"
                     android:fontFamily="@font/open_sans_medium"
                     android:gravity="center"
-                    android:text="Version 1.0"
+                    android:text="Version 1.1"
                     android:textColor="@color/gray"
                     android:textSize="16sp" />
 
@@ -219,7 +234,6 @@
 
             </LinearLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>
-
 
     </ScrollView>
 </FrameLayout>

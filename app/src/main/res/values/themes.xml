@@ -42,5 +42,13 @@
         <item name="android:focusedMonthDateColor">@color/black</item>
         <item name="android:selectedWeekBackgroundColor">@color/white</item>
     </style>
+    <style name="fullscreenalert" parent="Theme.AppCompat.Light.Dialog">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:windowAnimationStyle">@android:style/Animation.Dialog</item>
+    </style>
 
 </resources>

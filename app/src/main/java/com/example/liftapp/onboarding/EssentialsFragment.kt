@@ -38,7 +38,7 @@ class EssentialsFragment : Fragment() {
         }
 
         fragmentEssentialsBinding.bodyWeight.editText?.doAfterTextChanged { text ->
-            userViewModel.setWeight(text?.toString()?.toIntOrNull() ?: 0)
+            userViewModel.setWeight(text.toString().toDouble())
         }
 
         fragmentEssentialsBinding.maleOption.setOnClickListener { selectGender("Male") }

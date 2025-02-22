@@ -20,6 +20,7 @@ import com.example.liftapp.onboarding.WelcomeFragment
 import com.tbuonomo.viewpagerdotsindicator.DotsIndicator
 import android.provider.Settings
 import android.util.Log
+import android.widget.ImageButton
 import android.widget.Toast
 import androidx.activity.viewModels
 import com.example.liftapp.helper.users.UserProfileHelper
@@ -62,7 +63,7 @@ class OnboardingActivity : AppCompatActivity() {
 
         userProfileHelper = UserProfileHelper()
         nextButton = findViewById<Button>(R.id.nextButton)
-        val backButton = findViewById<Button>(R.id.backButton)
+        val backButton = findViewById<ImageButton>(R.id.backButton)
 
         prefMnager = PrefMnager(this)
 
@@ -184,7 +185,7 @@ class OnboardingActivity : AppCompatActivity() {
             userProfileHelper.saveUserData(
                 name.value ?: "",
                 age.value ?: 0,
-                weight.value ?: 0,
+                weight.value ?: 0.0,
                 gender.value ?: "",
                 unit.value ?: 0
             ) { success, error ->

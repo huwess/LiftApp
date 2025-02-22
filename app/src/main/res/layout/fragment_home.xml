@@ -5,15 +5,18 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/light_shade"
-    tools:context=".fragments.HomeFragment">
+    tools:context=".bottom_nav.HomeFragment"
+    android:paddingBottom="85dp">
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:fillViewport="true">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="200dp">
 
 <!--            HEADER-->
             <androidx.constraintlayout.widget.ConstraintLayout
@@ -58,7 +61,7 @@
                             android:layout_marginBottom="5dp"
                             android:fontFamily="@font/open_sans_bold"
                             android:text="1000"
-                            android:textSize="24sp"
+                            android:textSize="20sp"
                             android:textColor="@color/dark_gray"/>
 
                         <TextView
@@ -91,7 +94,7 @@
                             android:layout_marginBottom="5dp"
                             android:fontFamily="@font/open_sans_bold"
                             android:text="Novice"
-                            android:textSize="24sp"
+                            android:textSize="20sp"
                             android:textColor="@color/dark_gray"/>
 
                         <TextView
@@ -123,7 +126,7 @@
                             android:layout_marginBottom="5dp"
                             android:fontFamily="@font/open_sans_bold"
                             android:text="1000"
-                            android:textSize="24sp"
+                            android:textSize="20sp"
                             android:textColor="@color/dark_gray"/>
 
                         <TextView
@@ -253,6 +256,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:minHeight="48dp"
+                    android:nestedScrollingEnabled="false"
                     android:overScrollMode="never"
                     android:padding="4dp"
                     app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
@@ -308,6 +312,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/layout4"
+                app:layout_constraintBottom_toBottomOf="parent"
                 android:layout_marginTop="50dp"
                 android:layout_marginStart="10dp"
                 android:layout_marginEnd="10dp"
@@ -505,6 +510,7 @@
                 </LinearLayout>
 
             </LinearLayout>
+
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
 

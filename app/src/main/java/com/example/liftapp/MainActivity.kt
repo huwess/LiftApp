@@ -6,14 +6,11 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import com.example.liftapp.databinding.ActivityMainBinding
-import com.example.liftapp.fragments.HomeFragment
-import com.example.liftapp.fragments.SettingsFragment
+import com.example.liftapp.bottom_nav.HomeFragment
+import com.example.liftapp.bottom_nav.SettingsFragment
 import com.google.firebase.auth.FirebaseAuth
-import com.example.liftapp.PrefMnager
 import com.example.liftapp.helper.users.UserProfileHelper
 import com.example.liftapp.helper.users.UserViewModel
 
@@ -31,13 +28,24 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
-
+        firebaseAuth = FirebaseAuth.getInstance()
+        val currentUser = firebaseAuth.currentUser
+        userProfileHelper = UserProfileHelper()
 
         setContentView(binding.root)
         prefManager = PrefMnager(this)
         if(prefManager.isFirstTimeLaunch()) {
-            startActivity(Intent(this, OnboardingActivity::class.java))
-            finish()
+            if (currentUser != null) {
+                userProfileHelper.checkUserExists(currentUser.uid) { exists ->
+                    if (!exists) {
+                        startActivity(Intent(this, OnboardingActivity::class.java))
+                        Log.d("UserCheck", "User does not exist.")
+                        finish()
+
+                    }
+                }
+            }
+
         }
 
 //        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, insets ->
@@ -47,9 +55,8 @@ class MainActivity : AppCompatActivity() {
 //        }
         replaceFragment(HomeFragment())
 
-        userProfileHelper = UserProfileHelper()
-        firebaseAuth = FirebaseAuth.getInstance()
-        val currentUser = firebaseAuth.currentUser
+
+
 
         if (currentUser == null || !currentUser.isEmailVerified) {
             startActivity(Intent(this, SignInActivity::class.java))
@@ -77,6 +84,7 @@ class MainActivity : AppCompatActivity() {
 
 
     }
+
     private fun fetchUserData(userId: String) {
         Log.d("MainActivity", "Calling fetchUserData for userId: $userId")
 
