@@ -20,8 +20,11 @@ import com.example.liftapp.onboarding.WelcomeFragment
 import com.tbuonomo.viewpagerdotsindicator.DotsIndicator
 import android.provider.Settings
 import android.util.Log
+import android.widget.ImageButton
 import android.widget.Toast
+import androidx.activity.viewModels
 import com.example.liftapp.helper.users.UserProfileHelper
+import com.example.liftapp.helper.users.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 class OnboardingActivity : AppCompatActivity() {
@@ -29,7 +32,8 @@ class OnboardingActivity : AppCompatActivity() {
     private lateinit var viewPager: ViewPager2
     private lateinit var prefMnager: PrefMnager
     private lateinit var userProfileHelper: UserProfileHelper
-
+    private lateinit var nextButton: Button
+    private val userViewModel: UserViewModel by viewModels()
 
 
     private val cameraPermissionLauncher = registerForActivityResult(
@@ -58,8 +62,8 @@ class OnboardingActivity : AppCompatActivity() {
         }
 
         userProfileHelper = UserProfileHelper()
-        val nextButton = findViewById<Button>(R.id.nextButton)
-        val backButton = findViewById<Button>(R.id.backButton)
+        nextButton = findViewById<Button>(R.id.nextButton)
+        val backButton = findViewById<ImageButton>(R.id.backButton)
 
         prefMnager = PrefMnager(this)
 
@@ -69,7 +73,7 @@ class OnboardingActivity : AppCompatActivity() {
             PermissionsFragment(),
         )
         viewPager = findViewById(R.id.viewPager)
-
+        viewPager.isUserInputEnabled = false
         // Set up the adapter for the ViewPager
         val onboardingAdapter = OnboardingPagerAdapter(this)
         viewPager.adapter = onboardingAdapter
@@ -82,14 +86,23 @@ class OnboardingActivity : AppCompatActivity() {
             backButton.isEnabled = false
             backButton.isVisible = false
         }
+        userViewModel.run {
+            name.observe(this@OnboardingActivity) { updateButtonState() }
+            age.observe(this@OnboardingActivity) { updateButtonState() }
+            weight.observe(this@OnboardingActivity) { updateButtonState() }
+            gender.observe(this@OnboardingActivity) { updateButtonState() }
+            unit.observe(this@OnboardingActivity) { updateButtonState() }
+        }
+
 
         viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback(){
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
-
+                updateButtonState()
                 // Show back button only after the first page
                 backButton.isVisible = position > 0
                 backButton.isEnabled = position > 0
+
 
                 // Change "Next" button text on the last page
                 if (position == fragments.size - 1) {
@@ -123,6 +136,14 @@ class OnboardingActivity : AppCompatActivity() {
             }
         }
     }
+
+    override fun onResume() {
+        super.onResume()
+//        if(viewPager.currentItem != 1) {
+//            nextButton.isEnabled = true
+//            nextButton.isVisible = true
+//        }
+    }
     private fun clearMemory() {
         viewPager.adapter = null
     }
@@ -131,6 +152,22 @@ class OnboardingActivity : AppCompatActivity() {
         clearMemory()
         super.onDestroy()
     }
+
+    private fun updateButtonState() {
+        val isValid = when (viewPager.currentItem) {
+            1 -> {  // Essentials fragment position
+                userViewModel.name.value?.isNotBlank() == true &&
+                        userViewModel.age.value?.let { it > 0 } == true &&
+                        userViewModel.weight.value?.let { it > 0 } == true &&
+                        userViewModel.gender.value != null
+            }
+            else -> true
+        }
+
+        nextButton.isEnabled = isValid
+        nextButton.alpha = if (isValid) 1f else 0.5f
+    }
+
 
     private fun requestCameraPermission() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
@@ -141,31 +178,32 @@ class OnboardingActivity : AppCompatActivity() {
     }
 
     private fun saveUserDataAndRequestPermission() {
-        val essentialsFragment = supportFragmentManager.fragments
-            .find {
-                it.arguments?.getString("FRAGMENT_TYPE") == "ESSENTIALS"
-            } as? EssentialsFragment
-        var name: String = ""
-        var age: Int = 0
-        var unit: Int = 0
-        var gender: String = ""
-        var weight: Int = 0
-        essentialsFragment?.let {
-            name = it.getEnteredName()
-            age = it.getEnteredAge()
-            weight = it.getEnteredWeight()
-            gender = it.getSelectedGender().toString()
-            unit = it.getSelectedUnit()
-        }
-        Log.d("OnboardingActivity", "Name: $name, Age: $age, Unit: $unit, Gender: $gender, Weight: $weight")
+        val userViewModel: UserViewModel by viewModels()
 
-        userProfileHelper.saveUserData(name, age, weight, gender, unit) { success, error ->
-            if (success) {
-                Toast.makeText(this, "Success", Toast.LENGTH_SHORT).show()
-                requestCameraPermission()
-            } else {
-                Toast.makeText(this, "Error saving data: $error", Toast.LENGTH_SHORT).show()
+        Log.d("OnboardingActivity", "Name: ${userViewModel.name}, Age: ${userViewModel.age}, Unit: ${userViewModel.unit}, Gender: ${userViewModel.gender}, Weight: ${userViewModel.weight}")
+        userViewModel.run {
+            userProfileHelper.saveUserData(
+                name.value ?: "",
+                age.value ?: 0,
+                weight.value ?: 0.0,
+                gender.value ?: "",
+                unit.value ?: 0
+            ) { success, error ->
+                // ... handle result ...
+                if (success) {
+                    result("Success", error)
+                    requestCameraPermission()
+                } else {
+                    result("Error", error)
+                }
             }
+        }
+    }
+    private fun result(result: String, error: String?) {
+        if(result == "Success") {
+            Toast.makeText(this, "Success", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(this, "Error saving data: $error", Toast.LENGTH_SHORT).show()
         }
     }
 

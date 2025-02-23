@@ -2,10 +2,13 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:title="My Account">
         <menu>
-            <item android:title="Edit Profile" />
-            <item android:title="Edit Units"/>
-            <item android:title="Delete Account"/>
-            <item android:title="Change Password"/>
+            <item android:title="Edit Profile"
+                android:id="@+id/editProfile"/>
+            <item android:title="Edit Units"
+                android:id="@+id/editUnits"/>
+            <item android:title="Delete Account" android:enabled="false" android:visible="false"/>
+            <item android:title="Change Password"
+                android:id="@+id/change_password"/>
             <item android:title="Sign Out"
                 android:id="@+id/signOut"/>
         </menu>
@@ -13,19 +16,23 @@
 
     <item android:title="Settings">
         <menu>
-            <item android:title="Appearance"/>
-            <item android:title="Reminders"/>
-            <item android:title="Privacy Center"/>
-            <item android:title="Push Notification"/>
+            <item android:title="Appearance"
+                android:id="@+id/appearance"/>
+            <item android:title="Privacy Center"
+                android:id="@+id/privacy_center"/>
         </menu>
     </item>
 
     <item android:title="Help">
         <menu>
-            <item android:title="About Us"/>
-            <item android:title="Contact Support"/>
-            <item android:title="Feedback"/>
-            <item android:title="Share with friends"/>
+            <item android:title="About Us"
+                android:id="@+id/about_us"/>
+            <item android:title="Contact Support"
+                android:id="@+id/contact_support"/>
+            <item android:title="Feedback"
+                android:id="@+id/feedback"/>
+            <item android:title="Share with friends"
+                android:id="@+id/share_with_friends"/>
         </menu>
     </item>
 </menu>

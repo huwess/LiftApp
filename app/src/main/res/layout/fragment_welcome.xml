@@ -8,7 +8,8 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:background="@color/white">
         <ImageView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -21,8 +22,8 @@
             android:fontFamily="@font/open_sans_bold"
             android:gravity="center"
             android:text="Start Your Journey With LIFT!"
-            android:textSize="38sp"
-            android:layout_marginHorizontal="20dp"/>
+            android:textSize="24sp"
+            android:layout_marginHorizontal="40dp"/>
 
         <TextView
             android:layout_width="match_parent"
@@ -30,9 +31,9 @@
             android:fontFamily="@font/open_sans_medium"
             android:gravity="center"
             android:text="Elevate your form for every rep with our Posture Detection and Strength Assessment."
-            android:layout_marginHorizontal="20dp"
+            android:layout_marginHorizontal="40dp"
             android:layout_marginTop="10dp"
-            android:textSize="28sp" />
+            android:textSize="20sp" />
     </LinearLayout>
 
 

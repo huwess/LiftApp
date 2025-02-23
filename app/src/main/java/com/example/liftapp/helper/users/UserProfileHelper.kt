@@ -11,9 +11,15 @@ class UserProfileHelper {
     private val usersRef: DatabaseReference = database.getReference("users")
 
 
-
     // Save user data to database
-    fun saveUserData(name: String, age: Int, weight: Int, gender: String, unit: Int,   callback: (Boolean, String?) -> Unit) {
+    fun saveUserData(
+        name: String,
+        age: Int,
+        weight: Double,
+        gender: String,
+        unit: Int,
+        callback: (Boolean, String?) -> Unit
+    ) {
         val currentUser = auth.currentUser
 
         if (currentUser != null) {
@@ -37,56 +43,89 @@ class UserProfileHelper {
         }
     }
 
+    fun fetchUserData(userId: String, callback: (User?) -> Unit) {
+        Log.d("UserProfileHelper", "Fetching data for userId: $userId")
 
-//    // Get user data from database
-//    fun getUserData(callback: (Boolean, Map<String, Any>?, String?) -> Unit) {
-//        val currentUser = auth.currentUser
-//        if (currentUser != null) {
-//            usersRef.child(currentUser.uid).addListenerForSingleValueEvent(object : ValueEventListener {
-//                override fun onDataChange(snapshot: DataSnapshot) {
-//                    if (snapshot.exists()) {
-//                        val userData = snapshot.value as? Map<String, Any>
-//                        name = userData?.get("name") as? String ?: ""
-//                        age = userData?.get("age") as? Int ?: 0
-//                        unit = userData?.get("unit") as? Int ?: 0
-//                        gender = userData?.get("gender") as? String ?: ""
-//                        weight = userData?.get("weight") as? Int ?: 0
-//                        callback(true, userData, null)
-//                    } else {
-//                        callback(false, null, "User data not found")
-//                    }
-//                }
-//
-//                override fun onCancelled(error: DatabaseError) {
-//                    callback(false, null, error.message)
-//                }
-//            })
-//        } else {
-//            callback(false, null, "User not logged in")
-//        }
-//    }
-//
-//    // Update user data in database
-//    fun updateUserData(name: String? = null, age: Int? = null, unit: Int? = null, gender: String? = null, weight: Int? = null, callback: (Boolean, String?) -> Unit) {
-//        val currentUser = auth.currentUser
-//        if (currentUser != null) {
-//            val updates = mutableMapOf<String, Any>()
-//            name?.let { updates["name"] = it }
-//            age?.let { updates["age"] = it }
-//            unit?.let { updates["unit"] = it }
-//            gender?.let { updates["gender"] = it }
-//            weight?.let { updates["weight"] = it }
-//
-//            if (updates.isNotEmpty()) {
-//                usersRef.child(currentUser.uid).updateChildren(updates)
-//                    .addOnSuccessListener { callback(true, null) }
-//                    .addOnFailureListener { e -> callback(false, e.message) }
-//            } else {
-//                callback(false, "No data to update")
-//            }
-//        } else {
-//            callback(false, "User not logged in")
-//        }
-//    }
+        usersRef.child(userId).addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                if (snapshot.exists()) {
+                    Log.d("UserProfileHelper", "Data snapshot exists: $snapshot")
+
+                    val user = snapshot.getValue(User::class.java)
+
+                    if (user != null) {
+                        Log.d("UserProfileHelper", "User data retrieved: $user")
+                        callback(user)
+                    } else {
+                        Log.e("UserProfileHelper", "User is null after deserialization")
+                        callback(null)
+                    }
+                } else {
+                    Log.e("UserProfileHelper", "No data found for userId: $userId")
+                    callback(null)
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("UserProfileHelper", "Database error: ${error.message}")
+                callback(null)
+            }
+        })
+    }
+
+    fun updateUserData(
+        userId: String,
+        updates: Map<String, Any>,
+        callback: (Boolean, String?) -> Unit
+    ) {
+        usersRef.child(userId).updateChildren(updates)
+            .addOnSuccessListener {
+                callback(true, null)
+            }
+            .addOnFailureListener { e ->
+                callback(false, e.message)
+            }
+    }
+
+    fun updateUserWeightAndUnit(
+        userId: String,
+        weight: Double,
+        unit: Int,
+        callback: (Boolean, String?) -> Unit
+    ) {
+        val updates = mapOf(
+            "weight" to weight,
+            "unit" to unit
+        )
+
+        usersRef.child(userId).updateChildren(updates)
+            .addOnSuccessListener {
+                callback(true, null)
+            }
+            .addOnFailureListener { e ->
+                callback(false, e.message)
+            }
+    }
+
+    // Check if user exists in the database
+    fun checkUserExists(userId: String, callback: (Boolean) -> Unit) {
+        usersRef.child(userId).addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                if (snapshot.exists()) {
+                    // User exists in the database
+                    callback(true)
+                } else {
+                    // User does not exist
+                    callback(false)
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("UserProfileHelper", "Database error: ${error.message}")
+                callback(false)
+            }
+        })
+    }
+
+
 }
-
