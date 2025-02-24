@@ -1,5 +1,6 @@
 package com.example.liftapp.calendar
 
+import android.annotation.SuppressLint
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -25,6 +26,7 @@ class WeekCalendarAdapter(
         return DayViewHolder(view)
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: DayViewHolder, position: Int) {
         val date = days.getOrNull(position) ?: run {
             Log.e("ADAPTER", "Invalid position: $position")
@@ -35,7 +37,7 @@ class WeekCalendarAdapter(
         // Highlight today's date
         if (date == currentDate) {
             holder.textView.setTextColor(ContextCompat.getColor(holder.itemView.context, R.color.dark_gray))
-            holder.textView.setBackgroundResource(R.drawable.circle)
+            holder.textView.setBackgroundResource(R.drawable.circle_2)
         } else {
             holder.textView.setTextColor(ContextCompat.getColor(holder.itemView.context, R.color.gray))
             holder.textView.background = null
