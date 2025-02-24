@@ -41,6 +41,9 @@ android {
 
 dependencies {
 
+    implementation(libs.androidx.navigation.fragment.ktx)
+    implementation(libs.androidx.navigation.ui.ktx)
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -57,7 +60,6 @@ dependencies {
     //Charts
     implementation(libs.mpandroidchart)
     implementation(libs.firebase.database)
-    implementation(libs.androidx.navigation.fragment.ktx)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -66,4 +68,19 @@ dependencies {
 
     //Indicator
     implementation(libs.dotsindicator)
+
+    // CameraX core library
+    implementation(libs.androidx.camera.core)
+
+    // CameraX Camera2 extensions
+    implementation(libs.androidx.camera.camera2)
+
+    // CameraX Lifecycle library
+    implementation(libs.androidx.camera.lifecycle)
+
+    // CameraX View class
+    implementation(libs.androidx.camera.view)
+
+    // MediaPipe Library
+    implementation(libs.tasks.vision)
 }
