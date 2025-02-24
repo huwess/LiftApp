@@ -1,4 +1,4 @@
-package com.example.liftapp.fragments
+package com.example.liftapp.bottom_nav.fab_add
 
 import android.Manifest
 import android.content.Context
@@ -10,15 +10,14 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.Navigation
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.Navigation
 import com.example.liftapp.R
 import kotlinx.coroutines.launch
 
 private val PERMISSIONS_REQUIRED = arrayOf(Manifest.permission.CAMERA)
 
 class PermissionsFragment : Fragment() {
-
     private val requestPermissionLauncher =
         registerForActivityResult(
             ActivityResultContracts.RequestPermission()
