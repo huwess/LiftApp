@@ -20,8 +20,6 @@
         android:id="@+id/bottomAppBar"
         android:layout_gravity="bottom"
         android:backgroundTint="@color/dark_gray"
-        app:fabAlignmentMode="center"
-        app:fabCradleVerticalOffset="50dp"
         app:fabCradleMargin="10dp"
         app:fabCradleRoundedCornerRadius="50dp">
 
@@ -34,6 +32,7 @@
             app:labelVisibilityMode="labeled"
             app:menu="@menu/bottom_menu"
             app:itemTextColor="@color/bottom_nav_selector"
+            app:itemIconTint="@color/bottom_nav_selector"
             app:itemRippleColor="@color/white"
             />
 
@@ -42,10 +41,10 @@
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:backgroundTint="@color/primary_text"
+        android:backgroundTint="@color/primary"
         android:src="@drawable/fab"
         app:layout_anchor="@id/bottomAppBar"
         app:maxImageSize="40dp"
-        app:tint ="@color/calm"/>
+        app:tint ="@color/white"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

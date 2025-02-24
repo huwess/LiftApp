@@ -118,14 +118,14 @@
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/open_sans_bold"
                             android:text="172.1kg"
-                            android:textColor="@color/white"
+                            android:textColor="@color/dark_gray"
                             android:textSize="12sp"/>
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Weight"
-                            android:textColor="@color/white"
+                            android:textColor="@color/gray"
                             android:textSize="12sp"/>
                     </LinearLayout>
 
@@ -152,14 +152,14 @@
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/open_sans_bold"
                             android:text="26"
-                            android:textColor="@color/white"
+                            android:textColor="@color/dark_gray"
                             android:textSize="14sp"/>
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="y/o"
-                            android:textColor="@color/white"
+                            android:textColor="@color/gray"
                             android:textSize="12sp"/>
                     </LinearLayout>
 
@@ -186,14 +186,14 @@
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/open_sans_bold"
                             android:text="Female"
-                            android:textColor="@color/white"
+                            android:textColor="@color/dark_gray"
                             android:textSize="14sp"/>
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Sex"
-                            android:textColor="@color/white"
+                            android:textColor="@color/gray"
                             android:textSize="12sp"/>
                     </LinearLayout>
 
