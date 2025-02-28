@@ -7,7 +7,11 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.replace
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
+import com.example.liftapp.R
+import com.example.liftapp.bottom_nav.fab_add.CalendarFragment
 import com.example.liftapp.calendar.CurrentWeekData
 import com.example.liftapp.calendar.WeekCalendarAdapter
 import com.example.liftapp.databinding.FragmentHomeBinding
@@ -58,7 +62,7 @@ class HomeFragment : Fragment() {
         fragmentHomeBinding.chart.description = description
         fragmentHomeBinding.chart.axisRight.setDrawLabels(false)
 
-        val xValues = arrayOf("Frail", "Untrained", "Novice", "Intermediate", "Advance", "Elite")
+        val xValues = arrayOf( "Untrained", "Novice", "Intermediate", "Advance", "Elite")
         var xAxis = XAxis()
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM)
         xAxis.setAxisMinimum(0f)
@@ -136,6 +140,11 @@ class HomeFragment : Fragment() {
             layoutManager = GridLayoutManager(context, 7)
             adapter = WeekCalendarAdapter(daysInWeek)
             setHasFixedSize(true)
+        }
+        fragmentHomeBinding.allRecords.setOnClickListener {
+            val calendarFragment = CalendarFragment()
+            requireActivity().supportFragmentManager.beginTransaction().replace(R.id.frame_layout, calendarFragment)
+                .addToBackStack(null).commit()
         }
     }
 

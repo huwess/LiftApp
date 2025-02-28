@@ -1,9 +1,11 @@
 [versions]
-agp = "8.8.1"
+agp = "8.8.2"
 cameraxVersion = "1.4.1"
+compiler = "4.12.0"
 coreSplashscreen = "1.0.1"
 dotsindicator = "5.1.0"
 fragmentKtx = "1.8.6"
+glide = "4.16.0"
 kotlin = "2.0.21"
 coreKtx = "1.15.0"
 junit = "4.13.2"
@@ -11,8 +13,8 @@ junitVersion = "1.2.1"
 espressoCore = "3.6.1"
 appcompat = "1.7.0"
 material = "1.12.0"
-activity = "1.10.0"
-constraintlayout = "2.2.0"
+activity = "1.10.1"
+constraintlayout = "2.2.1"
 annotation = "1.9.1"
 lifecycleLivedataKtx = "2.8.7"
 lifecycleViewmodelKtx = "2.8.7"
@@ -21,10 +23,13 @@ firebaseAuth = "23.2.0"
 mpandroidchart = "v3.1.0"
 firebaseDatabase = "21.0.0"
 tasksVision = "0.20230731"
-navigationFragmentKtx = "2.8.7"
-navigationUiKtx = "2.8.7"
+navigationFragmentKtx = "2.8.8"
+navigationUiKtx = "2.8.8"
+poseDetectionCommon = "17.0.0"
 
 [libraries]
+compiler = { module = "com.github.bumptech.glide:compiler", version.ref = "compiler" }
+glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
 kotlin = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "cameraxVersion" }
 androidx-camera-core = { module = "androidx.camera:camera-core", version.ref = "cameraxVersion" }
@@ -51,6 +56,7 @@ firebase-database = { group = "com.google.firebase", name = "firebase-database",
 tasks-vision = { module = "com.google.mediapipe:tasks-vision", version.ref = "tasksVision" }
 androidx-navigation-fragment-ktx = { group = "androidx.navigation", name = "navigation-fragment-ktx", version.ref = "navigationFragmentKtx" }
 androidx-navigation-ui-ktx = { group = "androidx.navigation", name = "navigation-ui-ktx", version.ref = "navigationUiKtx" }
+pose-detection-common = { group = "com.google.mlkit", name = "pose-detection-common", version.ref = "poseDetectionCommon" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

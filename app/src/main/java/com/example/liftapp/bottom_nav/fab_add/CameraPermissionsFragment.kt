@@ -2,22 +2,21 @@ package com.example.liftapp.bottom_nav.fab_add
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.Navigation
 import com.example.liftapp.R
-import kotlinx.coroutines.launch
 
 private val PERMISSIONS_REQUIRED = arrayOf(Manifest.permission.CAMERA)
 
-class PermissionsFragment : Fragment() {
+class CameraPermissionsFragment : Fragment() {
+
     private val requestPermissionLauncher =
         registerForActivityResult(
             ActivityResultContracts.RequestPermission()
@@ -28,7 +27,7 @@ class PermissionsFragment : Fragment() {
                     "Permission request granted",
                     Toast.LENGTH_LONG
                 ).show()
-                navigateToCamera()
+                proceedToExerciseActivity()
             } else {
                 Toast.makeText(
                     context,
@@ -45,7 +44,7 @@ class PermissionsFragment : Fragment() {
                 requireContext(),
                 Manifest.permission.CAMERA
             ) -> {
-                navigateToCamera()
+                proceedToExerciseActivity()
             }
             else -> {
                 requestPermissionLauncher.launch(
@@ -55,17 +54,10 @@ class PermissionsFragment : Fragment() {
         }
     }
 
-    private fun navigateToCamera() {
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                Navigation.findNavController(
-                    requireActivity(),
-                    R.id.fragment_container
-                ).navigate(
-                    R.id.action_permissions_to_camera
-                )
-            }
-        }
+    private fun proceedToExerciseActivity() {
+        val intent = Intent(requireContext(), ExerciseActivity::class.java)
+        startActivity(intent)
+        requireActivity().finish() // Optional: Close the current fragment's activity
     }
 
     companion object {

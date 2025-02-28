@@ -60,10 +60,12 @@ dependencies {
     //Charts
     implementation(libs.mpandroidchart)
     implementation(libs.firebase.database)
+    implementation(libs.pose.detection.common)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
 
 
     //Indicator
@@ -83,4 +85,8 @@ dependencies {
 
     // MediaPipe Library
     implementation(libs.tasks.vision)
+
+    //GIF Handling
+    implementation (libs.glide)
+    annotationProcessor (libs.compiler)
 }
