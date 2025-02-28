@@ -16,6 +16,14 @@ class Calculator {
         return String.format("%.1f", lb / 2.20462).toDouble() // 1 lb = 0.453592 kg, rounded to 1 decimal place
     }
 
+    fun oneRepMaxCalculator(weightload: Double, reps: Int): Double {
+        if (reps < 6){ // Epley's formula
+            return weightload * (1 + (reps / 30))
+        } else { // Brzycki's formula
+            return weightload / (1.0278 - 0.0278 * reps)
+        }
+    }
+
     fun assStrengthLvl (age: Int, weight: Double, unit: Int, oneRepMax: Double, gender: String): String {
         val ageLvl = getAgeLvl(age)
         val weightLvl: Int
@@ -242,4 +250,5 @@ class Calculator {
             else -> 1
         }
     }
+
 }
