@@ -30,10 +30,10 @@ class Calculator {
             }
         } else {
             if (unit == 1) {
-                weightLvl = getWeightLvlFemaleKg(ageLvl, weight)
+                weightLvl = getWeightLvlFemaleKg(weight)
                 return getStrengthLvlFemaleKg(ageLvl, weightLvl, oneRepMax)
             } else {
-                weightLvl = getWeightLvlFemaleLb(ageLvl, weight)
+                weightLvl = getWeightLvlFemaleLb(weight)
                 return getStrengthLvlFemaleLb(ageLvl, weightLvl, oneRepMax)
             }
         }
@@ -149,7 +149,7 @@ class Calculator {
         }
     }
 
-    fun getWeightLvlFemaleKg (age: Int, weight: Double): Int {
+    fun getWeightLvlFemaleKg (weight: Double): Int {
         return when {
             weight in 44.0..47.9 -> 1
             weight in 48.0..51.9 -> 2
@@ -165,7 +165,7 @@ class Calculator {
         }
     }
 
-    fun getWeightLvlFemaleLb (age: Int, weight: Double): Int {
+    fun getWeightLvlFemaleLb (weight: Double): Int {
         return when {
             weight in 97.0..104.9 -> 1
             weight in 105.0..113.9 -> 2
