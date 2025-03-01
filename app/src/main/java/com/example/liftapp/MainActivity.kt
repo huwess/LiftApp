@@ -214,10 +214,10 @@ class MainActivity : AppCompatActivity() {
                     // Hide the soft keyboard
                     val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
                     imm.hideSoftInputFromWindow(weightInput.windowToken, 0)
-                    ttsHelper.speakText("Starting in fifteen seconds")
-                    var countdown = 15
+                    ttsHelper.speakText("Starting in five seconds")
+                    var countdown = 5
                     countdownText.visibility = View.VISIBLE
-                    val timer = object : CountDownTimer(15000, 1000) {
+                    val timer = object : CountDownTimer(5000, 1000) {
                         override fun onTick(p0: Long) {
                             countdownText.text = "${countdown--}s"
                             if(countdown == 2) {

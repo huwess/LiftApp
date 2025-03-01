@@ -13,6 +13,6 @@
 
     <fragment
         android:id="@+id/calendarFragment"
-        android:name="com.example.liftapp.bottom_nav.fab_add.CalendarFragment"
+        android:name="com.example.liftapp.calendar.CalendarFragment"
         android:label="Calendar" />
 </navigation>

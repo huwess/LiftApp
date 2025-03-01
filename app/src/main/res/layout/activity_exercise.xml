@@ -83,6 +83,18 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
+    <TextView
+        android:id="@+id/countdown_timer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:fontFamily="@font/open_sans_semibold"
+        android:gravity="center"
+        android:text="15s"
+        android:textColor="@color/gray"
+        android:textSize="64sp"
+        android:visibility="gone" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -103,6 +115,8 @@
             android:elevation="10sp"/>
 
         <Button
+            android:visibility="gone"
+            android:enabled="false"
             android:id="@+id/finish_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

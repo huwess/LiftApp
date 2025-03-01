@@ -7,11 +7,9 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.replace
-import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.liftapp.R
-import com.example.liftapp.bottom_nav.fab_add.CalendarFragment
+import com.example.liftapp.calendar.CalendarFragment
 import com.example.liftapp.calendar.CurrentWeekData
 import com.example.liftapp.calendar.WeekCalendarAdapter
 import com.example.liftapp.databinding.FragmentHomeBinding

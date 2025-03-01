@@ -3,24 +3,28 @@ package com.example.liftapp.bottom_nav.fab_add
 import android.annotation.SuppressLint
 import android.content.res.Configuration
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.util.Log
+import android.view.View
 import android.widget.TextView
-import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import com.example.liftapp.databinding.ActivityExerciseBinding
 import androidx.activity.viewModels
-import androidx.camera.core.AspectRatio
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
+import androidx.camera.core.resolutionselector.ResolutionSelector
+import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
-import androidx.navigation.Navigation
 import com.example.liftapp.R
-import com.google.android.material.textfield.TextInputEditText
+import com.example.liftapp.helper.audio.TextToSpeechHelper
+import com.example.liftapp.helper.calculator.Calculator
+import com.example.liftapp.helper.record.StrengthRecordHelper
+import com.example.liftapp.helper.users.UserProfileHelper
+import com.google.firebase.auth.FirebaseAuth
 import com.google.mediapipe.tasks.vision.core.RunningMode
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -32,6 +36,7 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
         private const val TAG = "Pose Landmarker"
     }
 
+
     private lateinit var binding: ActivityExerciseBinding
     private lateinit var poseLandmarkerHelper: PoseLandmarkerHelper
     private val viewModel: PoseLandmarkerViewModel by viewModels()
@@ -40,6 +45,12 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
     private var camera: Camera? = null
     private var cameraProvider: ProcessCameraProvider? = null
     private var cameraFacing = CameraSelector.LENS_FACING_FRONT
+    private lateinit var ttsHelper: TextToSpeechHelper
+    private lateinit var userProfileHelper: UserProfileHelper
+    private lateinit var strengthRecordHelper: StrengthRecordHelper
+    private lateinit var calculator: Calculator
+    private lateinit var firebaseAuth: FirebaseAuth
+    private var isPoseDetectionActive = false
 
     private lateinit var repCountTextView: TextView
     private lateinit var stageTextView: TextView
@@ -52,6 +63,8 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
 
     override fun onResume() {
         super.onResume()
+
+
 
         if (!CameraPermissionsFragment.hasPermissions(this)) {
             supportFragmentManager.beginTransaction()
@@ -90,6 +103,12 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
 //        enableEdgeToEdge()
         binding = ActivityExerciseBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        ttsHelper = TextToSpeechHelper(this)
+        userProfileHelper = UserProfileHelper()
+        strengthRecordHelper = StrengthRecordHelper()
+        calculator = Calculator()
+        firebaseAuth = FirebaseAuth.getInstance()
+
         repCountTextView = binding.cameraContainer.findViewById(R.id.repition_count)
         stageTextView = binding.cameraContainer.findViewById(R.id.stage)
         signTextView = binding.cameraContainer.findViewById(R.id.sign)
@@ -103,21 +122,22 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
         overlayView.overlayUpdateListener = this
 
         backgroundExecutor = Executors.newSingleThreadExecutor()
-
         binding.viewFinder.post {
             setUpCamera()
         }
 
-        backgroundExecutor.execute {
-            poseLandmarkerHelper = PoseLandmarkerHelper(
-                context = this,
-                runningMode = RunningMode.LIVE_STREAM,
-                minPoseDetectionConfidence = PoseLandmarkerHelper.DEFAULT_POSE_DETECTION_CONFIDENCE,
-                minPoseTrackingConfidence = PoseLandmarkerHelper.DEFAULT_POSE_TRACKING_CONFIDENCE,
-                minPosePresenceConfidence = PoseLandmarkerHelper.DEFAULT_POSE_PRESENCE_CONFIDENCE,
-                currentDelegate = PoseLandmarkerHelper.DELEGATE_CPU,
-                poseLandmarkerHelperListener = this
-            )
+        startCountdownTimer()
+
+
+
+
+        binding.stopButton.setOnClickListener {
+            ttsHelper.speakText("Exercise Cancelled.")
+            finish()
+        }
+
+        binding.finishButton.setOnClickListener {
+            calculateAndSaveRecord(weight)
         }
     }
 
@@ -136,8 +156,11 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
         )
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onRepsUpdated(reps: Int) {
         repCountTextView.text = reps.toString()
+
+        binding.finishButton.isEnabled = reps > 0
     }
 
     override fun onStageUpdated(stage: String) {
@@ -149,58 +172,63 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
     }
 
 
+
     @SuppressLint("UnsafeOptInUsageError")
     private fun bindCameraUseCases() {
-
-        // CameraProvider
         val cameraProvider = cameraProvider
             ?: throw IllegalStateException("Camera initialization failed.")
 
-        val cameraSelector =
-            CameraSelector.Builder().requireLensFacing(cameraFacing).build()
+        val cameraSelector = CameraSelector.Builder()
+            .requireLensFacing(cameraFacing)
+            .build()
 
-        // Preview. Only using the 4:3 ratio because this is the closest to our models
-        preview = Preview.Builder().setTargetAspectRatio(AspectRatio.RATIO_4_3)
+        val resolutionSelector = ResolutionSelector.Builder()
+            .setResolutionStrategy(
+                ResolutionStrategy.HIGHEST_AVAILABLE_STRATEGY // Automatically picks the best resolution
+            )
+            .build()
+
+        preview = Preview.Builder()
+            .setResolutionSelector(resolutionSelector) // Use new API
             .setTargetRotation(binding.viewFinder.display.rotation)
             .build()
 
-        // ImageAnalysis. Using RGBA 8888 to match how our models work
-        imageAnalyzer =
-            ImageAnalysis.Builder().setTargetAspectRatio(AspectRatio.RATIO_4_3)
-                .setTargetRotation(binding.viewFinder.display.rotation)
-                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
-                .build()
-                // The analyzer can then be assigned to the instance
-                .also {
-                    it.setAnalyzer(backgroundExecutor) { image ->
-                        detectPose(image)
-                    }
+        imageAnalyzer = ImageAnalysis.Builder()
+            .setResolutionSelector(resolutionSelector) // Apply to image analysis too
+            .setTargetRotation(binding.viewFinder.display.rotation)
+            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+            .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
+            .build()
+            .also {
+                it.setAnalyzer(backgroundExecutor) { image ->
+                    detectPose(image)
                 }
+            }
 
-        // Must unbind the use-cases before rebinding them
+        // Unbind existing use cases
         cameraProvider.unbindAll()
 
         try {
-            // A variable number of use-cases can be passed here -
-            // camera provides access to CameraControl & CameraInfo
+            // Bind the camera use cases
             camera = cameraProvider.bindToLifecycle(
                 this, cameraSelector, preview, imageAnalyzer
             )
 
-            // Attach the viewfinder's surface provider to preview use case
             preview?.setSurfaceProvider(binding.viewFinder.surfaceProvider)
         } catch (exc: Exception) {
             Log.e(TAG, "Use case binding failed", exc)
         }
     }
 
+
     private fun detectPose(imageProxy: ImageProxy) {
-        if(this::poseLandmarkerHelper.isInitialized) {
+        if (isPoseDetectionActive && this::poseLandmarkerHelper.isInitialized) {
             poseLandmarkerHelper.detectLiveStream(
                 imageProxy = imageProxy,
                 isFrontCamera = cameraFacing == CameraSelector.LENS_FACING_FRONT
             )
+        } else {
+            imageProxy.close() // Release the image if detection is not active
         }
     }
 
@@ -230,11 +258,10 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
     }
 
     override fun onResults(resultBundle: PoseLandmarkerHelper.ResultBundle) {
-        if (binding != null) {
 
-            // Indices of the landmarks we want to extract
-            val landmarkIndices = listOf(23, 11, 13, 24, 12, 14, 15, 16, 21, 22)
-            val coordinates = getLandmarkCoordinates(resultBundle, landmarkIndices)
+        // Indices of the landmarks we want to extract
+//        val landmarkIndices = listOf(23, 11, 13, 24, 12, 14, 15, 16, 21, 22)
+//        val coordinates = getLandmarkCoordinates(resultBundle, landmarkIndices)
 
 //            // Log the coordinates for debugging
 //            coordinates.forEach { (name, coord) ->
@@ -246,16 +273,83 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
 //                Log.d("Landmark", "$name: x=${coord.first}, y=${coord.second}")
 //            }
 
-            binding.overlay.setResults(
-                resultBundle.results.first(),
-                resultBundle.inputImageHeight,
-                resultBundle.inputImageWidth,
-                RunningMode.LIVE_STREAM
-            )
+        binding.overlay.setResults(
+            resultBundle.results.first(),
+            resultBundle.inputImageHeight,
+            resultBundle.inputImageWidth,
+            RunningMode.LIVE_STREAM
+        )
 
-            binding.overlay.invalidate()
+        binding.overlay.invalidate()
 
+    }
+
+    private fun startCountdownTimer() {
+        binding.countdownTimer.visibility = View.VISIBLE
+        ttsHelper.speakText("Starting in five seconds")
+        val timer = object : CountDownTimer(15000, 1000) {
+            override fun onTick(millisUntilFinished: Long) {
+                val secondsRemaining = millisUntilFinished / 1000
+                binding.countdownTimer.text = "$secondsRemaining s"
+            }
+
+            override fun onFinish() {
+                binding.countdownTimer.visibility = View.GONE
+                binding.finishButton.visibility = View.VISIBLE
+                isPoseDetectionActive = true
+
+
+                // Initialize PoseLandmarkerHelper only after countdown
+                backgroundExecutor.execute {
+                    poseLandmarkerHelper = PoseLandmarkerHelper(
+                        context = this@ExerciseActivity,
+                        runningMode = RunningMode.LIVE_STREAM,
+                        minPoseDetectionConfidence = PoseLandmarkerHelper.DEFAULT_POSE_DETECTION_CONFIDENCE,
+                        minPoseTrackingConfidence = PoseLandmarkerHelper.DEFAULT_POSE_TRACKING_CONFIDENCE,
+                        minPosePresenceConfidence = PoseLandmarkerHelper.DEFAULT_POSE_PRESENCE_CONFIDENCE,
+                        currentDelegate = PoseLandmarkerHelper.DELEGATE_CPU,
+                        poseLandmarkerHelperListener = this@ExerciseActivity
+                    )
+                }
+
+
+            }
+        }.start()
+    }
+
+    private fun calculateAndSaveRecord(weight : Double) {
+        firebaseAuth.currentUser?.let {
+            userProfileHelper.fetchUserData(it.uid) { user ->
+                if(user != null) {
+                    val userWeight = user.weight
+                    val userAge = user.age
+                    val userGender = user.gender
+                    val unit = user.unit
+
+                    val reps_final = repCountTextView.text.toString().toInt()
+                    val oneRepMax = calculator.oneRepMaxCalculator(weight, reps_final)
+
+                    val strengthLevel = calculator.assStrengthLvl(userAge, userWeight, unit, oneRepMax, userGender)
+                    strengthRecordHelper.saveStrengthRecord(
+                        reps_final,
+                        weight,
+                        oneRepMax,
+                        strengthLevel,
+                        onSuccess = {
+                            ttsHelper.speakText("Exercise Completed")
+                            finish()
+                        },
+                        onFailure = { error ->
+                            ttsHelper.speakText("Failed to save exercise record.")
+                            error.printStackTrace()
+                        }
+                    )
+                } else {
+                    Log.e("ExerciseActivity", "User data is null")
+                }
+            }
         }
 
     }
+
 }
