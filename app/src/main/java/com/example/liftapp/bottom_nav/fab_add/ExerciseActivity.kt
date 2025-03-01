@@ -4,6 +4,8 @@ import android.annotation.SuppressLint
 import android.content.res.Configuration
 import android.os.Bundle
 import android.os.CountDownTimer
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.View
 import android.widget.TextView
@@ -26,6 +28,8 @@ import com.example.liftapp.helper.record.StrengthRecordHelper
 import com.example.liftapp.helper.users.UserProfileHelper
 import com.google.firebase.auth.FirebaseAuth
 import com.google.mediapipe.tasks.vision.core.RunningMode
+import java.util.Timer
+import java.util.TimerTask
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -56,6 +60,15 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
     private lateinit var stageTextView: TextView
     private lateinit var signTextView: TextView
     private var weight: Double = 0.0
+    private var timer: CountDownTimer? = null
+    private var exerciseStartTime: Long = 0L
+    private var exerciseTimer: Timer? = null
+    private var lastSpeechTime = 0L
+    private val SPEECH_COOLDOWN = 3000 // 3 seconds between announcements
+    private var currentSign = ""
+    private var isSpeechPending = false
+    private val handler = Handler(Looper.getMainLooper())
+
 
 
     /** Blocking ML operations are performed using this executor */
@@ -95,6 +108,7 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
         backgroundExecutor.awaitTermination(
             Long.MAX_VALUE, TimeUnit.NANOSECONDS
         )
+
     }
 
 
@@ -156,9 +170,9 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
         )
     }
 
-    @SuppressLint("SetTextI18n")
+    @SuppressLint("SetTextI18n", "DefaultLocale")
     override fun onRepsUpdated(reps: Int) {
-        repCountTextView.text = reps.toString()
+        repCountTextView.text = String.format("Count: %d", reps)
 
         binding.finishButton.isEnabled = reps > 0
     }
@@ -168,7 +182,31 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
     }
 
     override fun onSignUpdated(sign: String) {
+        if (sign != currentSign && sign != "Proper") {
+            currentSign = sign
+            handler.removeCallbacksAndMessages(null)
+            isSpeechPending = false
+
+            val timeSinceLastSpeech = System.currentTimeMillis() - lastSpeechTime
+
+            if (timeSinceLastSpeech > SPEECH_COOLDOWN) {
+                triggerSpeech(sign)
+            } else {
+                isSpeechPending = true
+                handler.postDelayed({
+                    if (isSpeechPending) {
+                        triggerSpeech(sign)
+                    }
+                }, SPEECH_COOLDOWN - timeSinceLastSpeech)
+            }
+        }
         signTextView.text = sign
+    }
+    private fun triggerSpeech(sign: String) {
+        ttsHelper.stopSpeaking() // Takes advantage of existing stopSpeaking()
+        ttsHelper.speakText(sign)
+        lastSpeechTime = System.currentTimeMillis()
+        isSpeechPending = false
     }
 
 
@@ -296,7 +334,9 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
             override fun onFinish() {
                 binding.countdownTimer.visibility = View.GONE
                 binding.finishButton.visibility = View.VISIBLE
+                binding.timerLayout.visibility = View.VISIBLE
                 isPoseDetectionActive = true
+
 
 
                 // Initialize PoseLandmarkerHelper only after countdown
@@ -312,12 +352,13 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
                     )
                 }
 
-
+                startExerciseTimer()
             }
         }.start()
     }
 
     private fun calculateAndSaveRecord(weight : Double) {
+        val duration = stopExerciseTimer()
         firebaseAuth.currentUser?.let {
             userProfileHelper.fetchUserData(it.uid) { user ->
                 if(user != null) {
@@ -335,6 +376,7 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
                         weight,
                         oneRepMax,
                         strengthLevel,
+                        duration,
                         onSuccess = {
                             ttsHelper.speakText("Exercise Completed")
                             finish()
@@ -350,6 +392,25 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
             }
         }
 
+    }
+    private fun startExerciseTimer() {
+        exerciseStartTime = System.currentTimeMillis()
+        exerciseTimer = Timer()
+        exerciseTimer?.schedule(object : TimerTask() {
+            override fun run() {
+                runOnUiThread {
+                    val elapsedMillis = System.currentTimeMillis() - exerciseStartTime
+                    val minutes = TimeUnit.MILLISECONDS.toMinutes(elapsedMillis)
+                    val seconds = TimeUnit.MILLISECONDS.toSeconds(elapsedMillis) % 60
+                    binding.timerTV.text = String.format("%02d:%02d", minutes, seconds)
+                }
+            }
+        }, 0, 1000) // Update every second
+    }
+
+    private fun stopExerciseTimer(): Long {
+        exerciseTimer?.cancel()
+        return System.currentTimeMillis() - exerciseStartTime
     }
 
 }

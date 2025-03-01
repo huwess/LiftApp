@@ -4,6 +4,7 @@ import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ServerValue
 
 class StrengthRecordHelper {
     private val database: FirebaseDatabase = FirebaseDatabase.getInstance(
@@ -17,6 +18,7 @@ class StrengthRecordHelper {
         dumbbellWeight: Double,
         oneRepMax: Double,
         strengthLevel: String,
+        duration: Long,
         onSuccess: () -> Unit,
         onFailure: (Exception) -> Unit
     ) {
@@ -44,7 +46,7 @@ class StrengthRecordHelper {
                 return@addOnSuccessListener
             }
 
-            val record = StrengthRecord(repetitions, dumbbellWeight, oneRepMax, strengthLevel)
+            val record = StrengthRecord(repetitions, dumbbellWeight, oneRepMax, strengthLevel, duration, ServerValue.TIMESTAMP)
 
             recordsRef.child(userId).child(recordId).setValue(record)
                 .addOnSuccessListener { onSuccess() }

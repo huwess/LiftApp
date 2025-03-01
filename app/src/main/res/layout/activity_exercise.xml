@@ -26,10 +26,85 @@
         android:layout_height="match_parent"
         app:scaleType="fillStart" />
 
-    <TableLayout
+    <LinearLayout
+        android:id="@+id/timer_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="20dp">
+        android:orientation="horizontal"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="30dp"
+        android:gravity="center"
+        android:visibility="gone"
+        android:layout_marginHorizontal="20dp">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:gravity="start">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/open_sans_semibold"
+                android:text="Dumbbell Press"
+                android:textColor="@color/dark_gray"
+                android:textSize="18sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+            <!-- Timer Recording Icon -->
+            <ImageView
+                android:id="@+id/timerRecIcon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="5dp"
+                android:src="@drawable/camera_rec_red_point"
+                app:layout_constraintBottom_toBottomOf="@+id/timerTV"
+                app:layout_constraintEnd_toStartOf="@+id/timerTV"
+                app:layout_constraintTop_toTopOf="@+id/timerTV" />
+
+            <!-- Timer TextView -->
+            <TextView
+                android:id="@+id/timerTV"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/open_sans_bold"
+                android:text="00:00"
+                android:textColor="@color/dark_gray"
+                android:textSize="30sp" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:gravity="end">
+
+            <TextView
+                android:id="@+id/repition_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/open_sans_semibold"
+                android:text="Count: 0"
+                android:textColor="@color/dark_gray"
+                android:textSize="18sp"/>
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <TableLayout
+        android:visibility="invisible"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:layout_below="@+id/timer_layout">
 
         <TableRow>
             <TextView
@@ -39,7 +114,6 @@
                 android:textSize="24sp"
                 />
             <TextView
-                android:id="@+id/repition_count"
                 android:text="0"
                 android:textColor="@color/Red"
                 android:padding="2dp"
