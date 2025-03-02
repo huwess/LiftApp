@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.View
 import androidx.core.content.ContextCompat
@@ -28,7 +29,7 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
 
     private var results: PoseLandmarkerResult? = null
     private var pointPaint = Paint()
-    private var linePaint = Paint()
+    //    private var linePaint = Paint()
     private var textPaint = Paint()
 
     private var scaleFactor: Float = 1f
@@ -48,20 +49,20 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
     fun clear() {
         results = null
         pointPaint.reset()
-        linePaint.reset()
+//        linePaint.reset()
         textPaint.reset()
         invalidate()
         initPaints()
     }
 
     private fun initPaints() {
-        linePaint.color = ContextCompat.getColor(context!!, R.color.mp_color_primary)
-        linePaint.strokeWidth = 12f
-        linePaint.style = Paint.Style.STROKE
+//        linePaint.color = ContextCompat.getColor(context!!, R.color.mp_color_primary)
+//        linePaint.strokeWidth = 12f
+//        linePaint.style = Paint.Style.STROKE
 
-        pointPaint.color = Color.YELLOW
-        pointPaint.strokeWidth = 12f
-        pointPaint.style = Paint.Style.FILL
+//        pointPaint.color = Color.RED
+//        pointPaint.strokeWidth = 60f
+//        pointPaint.style = Paint.Style.FILL
 
         textPaint.color = Color.WHITE
         textPaint.textSize = 40f
@@ -81,96 +82,157 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
                 }
 
                 // Draw landmarks and connections
-                PoseLandmarker.POSE_LANDMARKS.forEach {
-                    canvas.drawLine(
-                        points[it.start()].first,
-                        points[it.start()].second,
-                        points[it.end()].first,
-                        points[it.end()].second,
-                        linePaint
-                    )
-                }
+//                PoseLandmarker.POSE_LANDMARKS.forEach {
+//                    canvas.drawLine(
+//                        points[it.start()].first,
+//                        points[it.start()].second,
+//                        points[it.end()].first,
+//                        points[it.end()].second,
+//                        linePaint
+//                    )
+//                }
 
-                for (normalizedLandmark in landmark) {
-                    canvas.drawPoint(
-                        normalizedLandmark.x() * imageWidth * scaleFactor,
-                        normalizedLandmark.y() * imageHeight * scaleFactor,
-                        pointPaint
-                    )
+                // This is for the Circle and Landmark Specifications
+                val importantLandmarkIndices = setOf(11, 12, 13, 14, 15, 16)
+
+                val indicators = mutableListOf<ProgressIndicator>()
+                val angles = calculatePoseAngles(points)
+                val leftShoulderAngle = angles["LHipLShoulderLElbow"] ?: 0f
+                val rightShoulderAngle = angles["RHipRShoulderRElbow"] ?: 0f
+                val leftElbowAngle = angles["LShoulderLElbowLWrist"] ?: 0f
+                val rightElbowAngle = angles["RShoulderRElbowRWrist"] ?: 0f
+                val leftShoulderShoulderAngle = angles["LElbowLShoulderRShoulder"] ?: 0f
+                val rightShoulderShoulderAngle = angles["RElbowRShoulderLShoulder"] ?: 0f
+                for (normalizedLandmark in landmark.withIndex()) {
+                    val index = normalizedLandmark.index
+                    if (index in importantLandmarkIndices) {
+                        val x = normalizedLandmark.value.x() * imageWidth * scaleFactor
+                        val y = normalizedLandmark.value.y() * imageHeight * scaleFactor
+
+                        val z = normalizedLandmark.value.z() * imageWidth * scaleFactor
+
+                        // Default progress values
+                        var progress = 0f
+                        var color = Color.RED // Default to red
+
+                        if (stage == "down") {
+                            progress = 0f
+
+                            color = if (sign == "Proper") Color.YELLOW else Color.RED
+                        } else if (stage == "up") {
+                            progress = 100f
+                            color = if (sign == "Proper") Color.GREEN else Color.RED
+                        }
+
+                        // Adjust progress based on angles
+                        when (index) {
+                            11 -> { // Shoulders
+                                progress = (rightShoulderAngle / 180f) * 100f
+
+                            }
+                            12 -> { // Shoulders
+                                progress = (leftShoulderAngle / 180f) * 100f
+                            }
+                            13 -> { // Elbows
+                                progress = (rightShoulderAngle / 175f) * 100f
+
+//                                if(quad == 0) {
+//                                    progress -= 50f
+//                                }
+                            }
+                            14 -> { // Elbows
+                                progress = (leftShoulderAngle / 175f) * 100f
+//                                if(quad == 0) {
+//                                    progress -= 50f
+//                                }
+                            }
+                            15 -> { // Wrists
+                                progress = ((rightShoulderAngle + rightElbowAngle) / 360f) * 100f
+                            }
+                            16 -> { // Wrists
+                                progress = ((leftShoulderAngle + leftElbowAngle) / 360f) * 100f
+                            }
+
+                        }
+
+                        indicators.add(ProgressIndicator(
+                            x = x,
+                            y = y,
+                            progress = progress.coerceIn(0f, 100f),
+                            mainColor = color,
+                            bgColor = Color.LTGRAY
+                        ))
+                    }
                 }
+                indicators.forEach { it.draw(canvas) }
 
                 // Calculate and draw angles
-                val angles = calculatePoseAngles(points)
-                val leftShoulderAngle = angles["LHipLShoulderLElbow"]
-                val rightShoulderAngle = angles["RHipRShoulderRElbow"]
-                val leftElbowAngle = angles["LShoulderLElbowLWrist"]
-                val rightElbowAngle = angles["RShoulderRElbowRWrist"]
-                val leftShoulderShoulderAngle = angles["LElbowLShoulderRShoulder"]
-                val rightShoulderShoulderAngle = angles["RElbowRShoulderLShoulder"]
+
+
 
                 //Visualize Angles
-                leftShoulderAngle?.let {
-                    val point =
-                        poseLandmarkerResult.landmarks()[0][12] // Example: Left Shoulder (point 12)
+                leftShoulderAngle.let {
+                    val point = poseLandmarkerResult.landmarks().get(0).get(12) // Example: Left Shoulder (point 12)
                     val x = point.x() * imageWidth * scaleFactor
                     val y = point.y() * imageHeight * scaleFactor + 20 // Adjust Y position by -10
-                    canvas.drawText("Left Shoulder: ${it.toInt()}°", x, y, textPaint)
+//                    canvas.drawText("Left Shoulder: ${it.toInt()}°", x, y, textPaint)
                 }
 
-                rightShoulderAngle?.let {
-                    val point =
-                        poseLandmarkerResult.landmarks()[0][11] // Example: Right Shoulder (point 11)
+                rightShoulderAngle.let {
+                    val point = poseLandmarkerResult.landmarks().get(0).get(11) // Example: Right Shoulder (point 11)
                     val x = point.x() * imageWidth * scaleFactor
                     val y = point.y() * imageHeight * scaleFactor + 20 // Adjust Y position by -10
-                    canvas.drawText("Right Shoulder: ${it.toInt()}°", x, y, textPaint)
+//                    canvas.drawText("Right Shoulder: ${it.toInt()}°", x, y, textPaint)
                 }
 
-                leftElbowAngle?.let {
-                    val point =
-                        poseLandmarkerResult.landmarks()[0][14] // Example: Left Elbow (point 14)
+                leftElbowAngle.let {
+                    val point = poseLandmarkerResult.landmarks().get(0).get(14) // Example: Left Elbow (point 14)
                     val x = point.x() * imageWidth * scaleFactor
                     val y = point.y() * imageHeight * scaleFactor - 10 // Adjust Y position by -10
-                    canvas.drawText("Left Elbow: ${it.toInt()}°", x, y, textPaint)
+//                    canvas.drawText("Left Elbow: ${it.toInt()}°", x, y, textPaint)
                 }
 
-                rightElbowAngle?.let {
-                    val point =
-                        poseLandmarkerResult.landmarks()[0][13] // Example: Right Elbow (point 13)
+                rightElbowAngle.let {
+                    val point = poseLandmarkerResult.landmarks().get(0).get(13) // Example: Right Elbow (point 13)
                     val x = point.x() * imageWidth * scaleFactor
                     val y = point.y() * imageHeight * scaleFactor - 10 // Adjust Y position by -10
-                    canvas.drawText("Right Elbow: ${it.toInt()}°", x, y, textPaint)
+//                    canvas.drawText("Right Elbow: ${it.toInt()}°", x, y, textPaint)
                 }
 
-                rightShoulderShoulderAngle?.let {
-                    val point =
-                        poseLandmarkerResult.landmarks()[0][11] // Example: Right Shoulder (point 11)
+                rightShoulderShoulderAngle.let {
+                    val point = poseLandmarkerResult.landmarks().get(0).get(11) // Example: Right Shoulder (point 11)
                     val x = point.x() * imageWidth * scaleFactor
                     val y = point.y() * imageHeight * scaleFactor - 10 // Adjust Y position by +10
-                    canvas.drawText("URight Shoulder: ${it.toInt()}°", x, y, textPaint)
+//                    canvas.drawText("URight Shoulder: ${it.toInt()}°", x, y, textPaint)
                 }
 
-                leftElbowAngle?.let {
-                    val point =
-                        poseLandmarkerResult.landmarks()[0][12] // Example: Left Shoulder (point 12)
+                leftElbowAngle.let {
+                    val point = poseLandmarkerResult.landmarks().get(0).get(12) // Example: Left Shoulder (point 12)
                     val x = point.x() * imageWidth * scaleFactor
                     val y = point.y() * imageHeight * scaleFactor - 10 // Adjust Y position by +10
-                    canvas.drawText("ULeft Shoulder: ${it.toInt()}°", x, y, textPaint)
+//                    canvas.drawText("ULeft Shoulder: ${it.toInt()}°", x, y, textPaint)
                 }
 
                 if (leftShoulderAngle != null) {
                     if (rightShoulderAngle != null) {
-                        quad = if(leftShoulderAngle < 90f &&  rightShoulderAngle < 90){
-                            0
+                        if(leftShoulderAngle < 90f &&  rightShoulderAngle < 90){
+                            quad = 0
                         } else {
-                            1
+                            quad = 1
                         }
                         if(leftShoulderAngle < 70 && rightShoulderAngle < 70) {
                             stage = "down"
+
+                            //wrist, elbow and shoulder progress is zero or low during this part
+
                             overlayUpdateListener?.onStageUpdated(stage)
                         }
 
                         if((leftShoulderAngle > 160 && rightShoulderAngle > 160) && (stage == "down")) {
                             stage = "up"
+
+                            //wrist, elbow and shoulder progress is complete or 100%
+
                             reps += 1
                             overlayUpdateListener?.onStageUpdated(stage)
                             overlayUpdateListener?.onRepsUpdated(reps)
@@ -179,10 +241,15 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
                             if(leftShoulderAngle > 160 && rightShoulderAngle > 160) {
                                 if (leftElbowAngle != null) {
                                     if (rightElbowAngle != null) {
-                                        sign = if(leftElbowAngle <= 165 && rightElbowAngle <= 165) {
-                                            "Proper"
+                                        if(leftElbowAngle <= 175 && rightElbowAngle <= 175) {
+                                            sign = "Proper"
+
+                                            //wrist, elbow and shoulder progress is complete or 100%
+
                                         } else {
-                                            "Too High"
+                                            sign = "Too High"
+
+                                            //wrist, elbow and shoulder progress is red but full in this part because it is too high
                                         }
                                         overlayUpdateListener?.onSignUpdated(sign)
                                     }
@@ -194,10 +261,15 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
                                         (rightShoulderShoulderAngle > 90 && rightShoulderShoulderAngle <=160) ) {
                                         if (leftElbowAngle != null) {
                                             if (rightElbowAngle != null) {
-                                                sign = if(leftElbowAngle <= 150 && rightElbowAngle <= 150 ) {
-                                                    "Proper"
+                                                if(leftElbowAngle <= 150 && rightElbowAngle <= 150 ) {
+                                                    sign = "Proper"
+
+                                                    //wrist, elbow and shoulder progress is complete or 100%
+
                                                 } else {
-                                                    "Too Wide"
+                                                    sign = "Too Wide"
+
+                                                    //wrist, elbow and shoulder progress is red and decreases because too  wide
                                                 }
 
                                                 overlayUpdateListener?.onSignUpdated(sign)
@@ -211,14 +283,21 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
                             }
 
                         } else {
-                            sign = if((leftShoulderAngle < 70) && (rightShoulderAngle < 70)) {
+                            if((leftShoulderAngle < 70) && (rightShoulderAngle < 70)) {
                                 if (leftShoulderAngle < 30 && rightShoulderAngle < 30) {
-                                    "Arms Too Low"
+                                    sign = "Arms Too Low"
+
+                                    //wrist, elbow and shoulder progress is
+
                                 } else {
-                                    "Proper"
+                                    sign = "Proper"
+
+                                    pointPaint.color = Color.YELLOW
+                                    pointPaint.strokeWidth = 60f
+                                    pointPaint.style = Paint.Style.FILL
                                 }
                             } else {
-                                ""
+                                sign = ""
                             }
                             overlayUpdateListener?.onSignUpdated(sign)
                         }
@@ -304,5 +383,38 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
             RunningMode.LIVE_STREAM -> max(width * 1f / imageWidth, height * 1f / imageHeight)
         }
         invalidate()
+    }
+
+    private inner class ProgressIndicator(
+        var x: Float = 0f,
+        var y: Float = 0f,
+        var progress: Float = 0f,
+        var mainColor: Int = Color.BLUE,
+        var bgColor: Int = Color.LTGRAY
+    ) {
+        private val strokeWidth = 12f
+        private val radius = 32f
+
+        fun draw(canvas: Canvas) {
+            // Draw background circle
+            val bgPaint = Paint().apply {
+                color = bgColor
+                style = Paint.Style.STROKE
+                strokeWidth = this@ProgressIndicator.strokeWidth
+                isAntiAlias = true
+            }
+            canvas.drawCircle(x, y, radius, bgPaint)
+
+            // Draw progress arc
+            val progressPaint = Paint().apply {
+                color = mainColor
+                style = Paint.Style.STROKE
+                strokeWidth = this@ProgressIndicator.strokeWidth
+                strokeCap = Paint.Cap.ROUND
+                isAntiAlias = true
+            }
+            val rect = RectF(x - radius, y - radius, x + radius, y + radius)
+            canvas.drawArc(rect, -90f, 360 * (progress / 100f), false, progressPaint)
+        }
     }
 }
