@@ -1,5 +1,6 @@
 package com.example.liftapp.bottom_nav
 
+import android.annotation.SuppressLint
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
@@ -13,6 +14,7 @@ import com.example.liftapp.calendar.CalendarFragment
 import com.example.liftapp.calendar.CurrentWeekData
 import com.example.liftapp.calendar.WeekCalendarAdapter
 import com.example.liftapp.databinding.FragmentHomeBinding
+import com.example.liftapp.helper.record.StrengthRecordHelper
 import com.google.firebase.auth.FirebaseAuth
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.Description
@@ -22,6 +24,7 @@ import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
+import java.util.concurrent.TimeUnit
 
 
 class HomeFragment : Fragment() {
@@ -29,6 +32,7 @@ class HomeFragment : Fragment() {
     private lateinit var firebaseAuth: FirebaseAuth
     private var _fragmentHomeBinding: FragmentHomeBinding? = null
     private val fragmentHomeBinding get() = _fragmentHomeBinding!!
+    private lateinit var strengthRecordHelper: StrengthRecordHelper
 
 
     private lateinit var lineChart: LineChart
@@ -44,6 +48,7 @@ class HomeFragment : Fragment() {
         // Inflate the layout for this fragment
 
         return fragmentHomeBinding.root
+
     }
 
     companion object {
@@ -53,7 +58,8 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         firebaseAuth = FirebaseAuth.getInstance()
-
+        strengthRecordHelper = StrengthRecordHelper()
+        fetchData()
         val description =  Description()
         description.text = "Strength Level"
         description.setPosition(160f, 20f)
@@ -149,6 +155,32 @@ class HomeFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _fragmentHomeBinding = null
+    }
+
+    @SuppressLint("SetTextI18n", "DefaultLocale")
+    private fun fetchData() {
+        strengthRecordHelper.fetchAllRecords(
+            onSuccess = { totalRepetitions, totalDuration, highestStrengthLevel, numberOfRecords, highestRepsInSingleRecord ->
+                // Convert duration to minutes and seconds
+                val minutes = TimeUnit.MILLISECONDS.toMinutes(totalDuration)
+                val seconds = TimeUnit.MILLISECONDS.toSeconds(totalDuration) % 60
+
+                fragmentHomeBinding.liftCount.text = totalRepetitions.toString()
+                fragmentHomeBinding.totalMinutes.text = String.format("%d.%d", minutes, seconds)
+                fragmentHomeBinding.currentLevel.text = highestStrengthLevel
+                fragmentHomeBinding.totalRecords.text = String.format("%02d", numberOfRecords)
+                fragmentHomeBinding.bestRepetition.text = String.format("%02d", highestRepsInSingleRecord)
+
+                // Display the results
+                Log.d("RecordsSummary", "Total Repetitions: $totalRepetitions")
+                Log.d("RecordsSummary", "Total Duration: $minutes minutes $seconds seconds")
+            },
+            onFailure = { e ->
+                Log.e("RecordsSummary", "Error fetching records: ${e.message}")
+                fragmentHomeBinding.liftCount.text = "null"
+                fragmentHomeBinding.totalMinutes.text = "null"
+            }
+        )
     }
 
 

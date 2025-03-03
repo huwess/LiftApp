@@ -12,6 +12,14 @@ class StrengthRecordHelper {
     )
     private val recordsRef: DatabaseReference = database.getReference("records")
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
+    private val strengthLevelHierarchy = mapOf(
+        "Elite" to 5,
+        "Advanced" to 4,
+        "Intermediate" to 3,
+        "Novice" to 2,
+        "Untrained" to 1,
+        "Unknown" to 0
+    )
 
     fun saveStrengthRecord(
         repetitions: Int,
@@ -54,6 +62,67 @@ class StrengthRecordHelper {
         }.addOnFailureListener {
             onFailure(Exception("Permission issue: ${it.message}"))
         }
+    }
+
+    fun fetchAllRecords(
+        onSuccess: (
+            totalRepetitions: Int,
+            totalDuration: Long,
+            highestStrengthLevel: String,
+            numberOfRecords: Int,
+            highestRepsInSingleRecord: Int
+        ) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        val userId = auth.currentUser?.uid ?: run {
+            onFailure(Exception("User not authenticated"))
+            return
+        }
+
+        // Fetch all records for the current user
+        recordsRef.child(userId).get()
+            .addOnSuccessListener { snapshot ->
+                if (snapshot.exists()) {
+                    var totalRepetitions = 0
+                    var totalDuration = 0L
+                    var highestStrengthLevelValue = 0
+                    var highestStrengthLevel = "Unknown" // Default value
+                    var numberOfRecords = 0
+                    var highestRepsInSingleRecord = 0
+
+                    // Iterate through all records
+                    for (recordSnapshot in snapshot.children) {
+                        val repetitions = recordSnapshot.child("repetitions").getValue(Int::class.java) ?: 0
+                        val duration = recordSnapshot.child("duration").getValue(Long::class.java) ?: 0L
+                        val strengthLevel = recordSnapshot.child("strengthLevel").getValue(String::class.java) ?: "Untrained"
+
+                        // Update totals
+                        totalRepetitions += repetitions
+                        totalDuration += duration
+                        numberOfRecords++
+
+                        // Track highest reps in a single record
+                        if (repetitions > highestRepsInSingleRecord) {
+                            highestRepsInSingleRecord = repetitions
+                        }
+
+                        // Check for highest strength level
+                        val currentStrengthLevelValue = strengthLevelHierarchy[strengthLevel] ?: 1
+                        if (currentStrengthLevelValue > highestStrengthLevelValue) {
+                            highestStrengthLevelValue = currentStrengthLevelValue
+                            highestStrengthLevel = strengthLevel
+                        }
+                    }
+
+                    // Return the results via onSuccess callback
+                    onSuccess(totalRepetitions, totalDuration, highestStrengthLevel, numberOfRecords, highestRepsInSingleRecord)
+                } else {
+                    onFailure(Exception("No records found for the user"))
+                }
+            }
+            .addOnFailureListener { e ->
+                onFailure(Exception("Failed to fetch records: ${e.message}"))
+            }
     }
 
 }
