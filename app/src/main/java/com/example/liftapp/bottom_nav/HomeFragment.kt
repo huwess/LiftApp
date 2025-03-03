@@ -14,6 +14,7 @@ import com.example.liftapp.calendar.CalendarFragment
 import com.example.liftapp.calendar.CurrentWeekData
 import com.example.liftapp.calendar.WeekCalendarAdapter
 import com.example.liftapp.databinding.FragmentHomeBinding
+import com.example.liftapp.helper.calculator.Calculator
 import com.example.liftapp.helper.record.StrengthRecordHelper
 import com.google.firebase.auth.FirebaseAuth
 import com.github.mikephil.charting.charts.LineChart
@@ -33,7 +34,7 @@ class HomeFragment : Fragment() {
     private var _fragmentHomeBinding: FragmentHomeBinding? = null
     private val fragmentHomeBinding get() = _fragmentHomeBinding!!
     private lateinit var strengthRecordHelper: StrengthRecordHelper
-
+    private lateinit var calculator: Calculator
 
     private lateinit var lineChart: LineChart
     private lateinit var xValues: List<String>
@@ -59,6 +60,7 @@ class HomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         firebaseAuth = FirebaseAuth.getInstance()
         strengthRecordHelper = StrengthRecordHelper()
+        calculator = Calculator()
         fetchData()
         val description =  Description()
         description.text = "Strength Level"
@@ -160,7 +162,7 @@ class HomeFragment : Fragment() {
     @SuppressLint("SetTextI18n", "DefaultLocale")
     private fun fetchData() {
         strengthRecordHelper.fetchAllRecords(
-            onSuccess = { totalRepetitions, totalDuration, highestStrengthLevel, numberOfRecords, highestRepsInSingleRecord ->
+            onSuccess = { totalRepetitions, totalDuration, highestStrengthLevel, numberOfRecords, highestRepsInSingleRecord, highestOneRepMax ->
                 // Convert duration to minutes and seconds
                 val minutes = TimeUnit.MILLISECONDS.toMinutes(totalDuration)
                 val seconds = TimeUnit.MILLISECONDS.toSeconds(totalDuration) % 60
@@ -170,6 +172,25 @@ class HomeFragment : Fragment() {
                 fragmentHomeBinding.currentLevel.text = highestStrengthLevel
                 fragmentHomeBinding.totalRecords.text = String.format("%02d", numberOfRecords)
                 fragmentHomeBinding.bestRepetition.text = String.format("%02d", highestRepsInSingleRecord)
+                fragmentHomeBinding.top1rm.text = String.format("%.2fkg", highestOneRepMax)
+
+                val w90 = calculator.getPercentageWeight(highestOneRepMax, 0.9)
+                val w80 = calculator.getPercentageWeight(highestOneRepMax, 0.8)
+                val w60 = calculator.getPercentageWeight(highestOneRepMax, 0.6)
+                val w50 = calculator.getPercentageWeight(highestOneRepMax, 0.5)
+
+                //Weight base on percentage
+                fragmentHomeBinding.weight90.text = String.format("%.1fkg", w90)
+                fragmentHomeBinding.weight80.text = String.format("%.1fkg", w80)
+                fragmentHomeBinding.weight60.text = String.format("%.1fkg", w60)
+                fragmentHomeBinding.weight50.text = String.format("%.1fkg", w50)
+
+                fragmentHomeBinding.rep90.text = calculator.calculateRepetitions(highestOneRepMax, w90, highestRepsInSingleRecord).toString()
+                fragmentHomeBinding.rep80.text = calculator.calculateRepetitions(highestOneRepMax, w80, highestRepsInSingleRecord).toString()
+                fragmentHomeBinding.rep60.text = calculator.calculateRepetitions(highestOneRepMax, w60, highestRepsInSingleRecord).toString()
+                fragmentHomeBinding.rep50.text = calculator.calculateRepetitions(highestOneRepMax, w50, highestRepsInSingleRecord).toString()
+
+
 
                 // Display the results
                 Log.d("RecordsSummary", "Total Repetitions: $totalRepetitions")

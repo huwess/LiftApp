@@ -70,7 +70,8 @@ class StrengthRecordHelper {
             totalDuration: Long,
             highestStrengthLevel: String,
             numberOfRecords: Int,
-            highestRepsInSingleRecord: Int
+            highestRepsInSingleRecord: Int,
+            highestOneRepMax: Double // Add this parameter
         ) -> Unit,
         onFailure: (Exception) -> Unit
     ) {
@@ -82,19 +83,21 @@ class StrengthRecordHelper {
         // Fetch all records for the current user
         recordsRef.child(userId).get()
             .addOnSuccessListener { snapshot ->
-                if (snapshot.exists()) {
+                if (snapshot.exists() && snapshot.childrenCount > 0) {
                     var totalRepetitions = 0
                     var totalDuration = 0L
                     var highestStrengthLevelValue = 0
-                    var highestStrengthLevel = "Unknown" // Default value
+                    var highestStrengthLevel = "Untrained" // Default value
                     var numberOfRecords = 0
                     var highestRepsInSingleRecord = 0
+                    var highestOneRepMax = 0.0 // Track highest 1-rep max
 
                     // Iterate through all records
                     for (recordSnapshot in snapshot.children) {
                         val repetitions = recordSnapshot.child("repetitions").getValue(Int::class.java) ?: 0
                         val duration = recordSnapshot.child("duration").getValue(Long::class.java) ?: 0L
                         val strengthLevel = recordSnapshot.child("strengthLevel").getValue(String::class.java) ?: "Untrained"
+                        val oneRepMax = recordSnapshot.child("oneRepMax").getValue(Double::class.java) ?: 0.0
 
                         // Update totals
                         totalRepetitions += repetitions
@@ -106,6 +109,11 @@ class StrengthRecordHelper {
                             highestRepsInSingleRecord = repetitions
                         }
 
+                        // Track highest 1-rep max
+                        if (oneRepMax > highestOneRepMax) {
+                            highestOneRepMax = oneRepMax
+                        }
+
                         // Check for highest strength level
                         val currentStrengthLevelValue = strengthLevelHierarchy[strengthLevel] ?: 1
                         if (currentStrengthLevelValue > highestStrengthLevelValue) {
@@ -115,9 +123,10 @@ class StrengthRecordHelper {
                     }
 
                     // Return the results via onSuccess callback
-                    onSuccess(totalRepetitions, totalDuration, highestStrengthLevel, numberOfRecords, highestRepsInSingleRecord)
+                    onSuccess(totalRepetitions, totalDuration, highestStrengthLevel, numberOfRecords, highestRepsInSingleRecord, highestOneRepMax)
                 } else {
-                    onFailure(Exception("No records found for the user"))
+                    // No records found for the user
+                    onSuccess(0, 0L, "Untrained", 0, 0, 0.0)
                 }
             }
             .addOnFailureListener { e ->

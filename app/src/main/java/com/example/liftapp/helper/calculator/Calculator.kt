@@ -15,6 +15,10 @@ class Calculator {
     fun lbToKg(lb: Double): Double {
         return String.format("%.1f", lb / 2.20462).toDouble() // 1 lb = 0.453592 kg, rounded to 1 decimal place
     }
+    @SuppressLint("DefaultLocale")
+    fun getPercentageWeight(oneRepMax: Double, percent : Double) : Double {
+        return oneRepMax * percent
+    }
 
     fun oneRepMaxCalculator(weightload: Double, reps: Int): Double {
         if (reps < 6){ // Epley's formula
@@ -22,6 +26,25 @@ class Calculator {
         } else { // Brzycki's formula
             return weightload / (1.0278 - 0.0278 * reps)
         }
+    }
+    fun calculateRepetitions(oneRepMax: Double, weightLifted: Double, repetition: Int): Int {
+        require(oneRepMax > 0) { "One-rep max must be greater than zero." }
+        require(weightLifted > 0) { "Weight lifted must be greater than zero." }
+        require(weightLifted < oneRepMax) { "Weight lifted must be less than one-rep max." }
+
+        var result : Int
+        if(repetition < 6) {
+            // Epley Formula: 1RM = weight * (1 + reps / 30)
+            // Rearranged to solve for reps: reps = 30 * (1RM / weight - 1)
+            result = (30 * (oneRepMax / weightLifted - 1)).toInt()
+        } else {
+            // Brzycki Formula: 1RM = weight * 36 / (37 - reps)
+            // Rearranged to solve for reps: reps = 37 - (36 * weight / 1RM)
+            result = (37 - (36 * weightLifted / oneRepMax)).toInt()
+        }
+
+        return result
+
     }
 
     fun assStrengthLvl (age: Int, weight: Double, unit: Int, oneRepMax: Double, gender: String): String {

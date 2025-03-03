@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="@color/white"
     tools:context=".bottom_nav.HomeFragment"
-    android:paddingBottom="85dp">
+    android:paddingBottom="80dp">
 
     <ScrollView
         android:layout_width="match_parent"
@@ -26,7 +26,7 @@
                 android:layout_marginStart="10dp"
                 android:layout_marginTop="20dp"
                 android:layout_marginEnd="10dp"
-                android:background="@drawable/home_rectangle"
+                android:background="@drawable/home_header_rectangle"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
@@ -42,7 +42,8 @@
                     app:layout_constraintTop_toTopOf="parent">
 
                     <LinearLayout
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
+
                         android:layout_height="wrap_content"
                         android:layout_marginHorizontal="30dp"
                         android:layout_marginVertical="20dp"
@@ -62,8 +63,8 @@
                             android:layout_marginTop="10dp"
                             android:layout_marginBottom="5dp"
                             android:fontFamily="@font/open_sans_bold"
-                            android:text="1000"
-                            android:textSize="20sp"
+                            android:text="0"
+                            android:textSize="16sp"
                             android:textColor="@color/dark_gray"/>
 
                         <TextView
@@ -76,13 +77,13 @@
                     </LinearLayout>
 
                     <LinearLayout
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginHorizontal="30dp"
                         android:layout_marginVertical="20dp"
                         android:gravity="center"
                         android:orientation="vertical"
-                        android:layout_weight="16">
+                        android:layout_weight="1">
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -96,8 +97,8 @@
                             android:layout_marginTop="10dp"
                             android:layout_marginBottom="5dp"
                             android:fontFamily="@font/open_sans_bold"
-                            android:text="Novice"
-                            android:textSize="20sp"
+                            android:text="Unknown"
+                            android:textSize="16sp"
                             android:textColor="@color/dark_gray"/>
 
                         <TextView
@@ -110,12 +111,13 @@
                     </LinearLayout>
 
                     <LinearLayout
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginHorizontal="30dp"
                         android:layout_marginVertical="20dp"
                         android:gravity="center"
-                        android:orientation="vertical">
+                        android:orientation="vertical"
+                        android:layout_weight="1">
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -129,8 +131,8 @@
                             android:layout_marginTop="10dp"
                             android:layout_marginBottom="5dp"
                             android:fontFamily="@font/open_sans_bold"
-                            android:text="1000.00"
-                            android:textSize="20sp"
+                            android:text="00.00"
+                            android:textSize="16sp"
                             android:textColor="@color/dark_gray"/>
 
                         <TextView
@@ -166,7 +168,7 @@
                 app:layout_constraintBottom_toTopOf="@+id/constraintLayout3"
                 app:layout_constraintEnd_toEndOf="parent"
                 android:layout_marginEnd="15dp"
-                android:textColor="@color/primary_text"
+                android:textColor="@color/primary"
                 android:clickable="true"
                 android:focusable="true"/>
 
@@ -376,6 +378,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/layout4"
                 app:layout_constraintBottom_toBottomOf="parent"
+                android:layout_marginBottom="20dp"
                 android:padding="10dp"
                 android:layout_marginTop="50dp"
                 android:layout_marginStart="10dp"
@@ -397,10 +400,11 @@
                         android:textColor="@color/gray"/>
 
                     <TextView
+                        android:id="@+id/top_1rm"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/open_sans_semibold"
-                        android:text="21.8kg"
+                        android:text="0kg"
                         android:textSize="14sp"
                         android:textColor="@color/dark_gray"
                         android:layout_marginStart="5dp"/>
@@ -413,7 +417,8 @@
                     android:layout_marginTop="15dp">
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
                         android:orientation="horizontal"
                         android:layout_marginHorizontal="15dp"
                         android:gravity="center"
@@ -443,10 +448,13 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginHorizontal="15dp"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginBottom="5dp"
                         app:dividerColor="@color/gray"/>
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
                         android:orientation="horizontal"
                         android:layout_marginHorizontal="15dp"
                         android:gravity="center"
@@ -458,17 +466,19 @@
                             android:text="90%"
                             android:textColor="@color/gray"/>
                         <TextView
+                            android:id="@+id/weight_90"
                             android:layout_width="0dp"
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
-                            android:text="21.8kg"
+                            android:text="0kg"
                             android:gravity="center"
                             android:textColor="@color/gray"/>
                         <TextView
+                            android:id="@+id/rep_90"
                             android:layout_width="0dp"
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
-                            android:text="1"
+                            android:text="0"
                             android:gravity="right"
                             android:textColor="@color/gray"/>
                     </LinearLayout>
@@ -476,10 +486,12 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginHorizontal="15dp"
+                        android:layout_marginVertical="5dp"
                         app:dividerColor="@color/gray"/>
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
                         android:orientation="horizontal"
                         android:layout_marginHorizontal="15dp"
                         android:gravity="center"
@@ -491,17 +503,19 @@
                             android:text="80%"
                             android:textColor="@color/gray"/>
                         <TextView
+                            android:id="@+id/weight_80"
                             android:layout_width="0dp"
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
-                            android:text="17.5kg"
+                            android:text="0kg"
                             android:gravity="center"
                             android:textColor="@color/gray"/>
                         <TextView
+                            android:id="@+id/rep_80"
                             android:layout_width="0dp"
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
-                            android:text="8"
+                            android:text="0"
                             android:gravity="right"
                             android:textColor="@color/gray"/>
                     </LinearLayout>
@@ -509,10 +523,12 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginHorizontal="15dp"
+                        android:layout_marginVertical="5dp"
                         app:dividerColor="@color/gray"/>
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
                         android:orientation="horizontal"
                         android:layout_marginHorizontal="15dp"
                         android:gravity="center"
@@ -524,17 +540,19 @@
                             android:text="60%"
                             android:textColor="@color/gray"/>
                         <TextView
+                            android:id="@+id/weight_60"
                             android:layout_width="0dp"
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
-                            android:text="13.1kg"
+                            android:text="0kg"
                             android:gravity="center"
                             android:textColor="@color/gray"/>
                         <TextView
+                            android:id="@+id/rep_60"
                             android:layout_width="0dp"
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
-                            android:text="20"
+                            android:text="0"
                             android:gravity="right"
                             android:textColor="@color/gray"/>
                     </LinearLayout>
@@ -542,10 +560,12 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginHorizontal="15dp"
+                        android:layout_marginVertical="5dp"
                         app:dividerColor="@color/gray"/>
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
                         android:orientation="horizontal"
                         android:layout_marginHorizontal="15dp"
                         android:gravity="center"
@@ -557,17 +577,19 @@
                             android:text="50"
                             android:textColor="@color/gray"/>
                         <TextView
+                            android:id="@+id/weight_50"
                             android:layout_width="0dp"
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
-                            android:text="10.9kg"
+                            android:text="0kg"
                             android:gravity="center"
                             android:textColor="@color/gray"/>
                         <TextView
+                            android:id="@+id/rep_50"
                             android:layout_width="0dp"
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
-                            android:text="30"
+                            android:text="0"
                             android:gravity="right"
                             android:textColor="@color/gray"/>
                     </LinearLayout>
