@@ -172,7 +172,7 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
 
     @SuppressLint("SetTextI18n", "DefaultLocale")
     override fun onRepsUpdated(reps: Int) {
-        repCountTextView.text = String.format("Count: %d", reps)
+        repCountTextView.text = String.format("%d", reps)
 
         binding.finishButton.isEnabled = reps > 0
     }

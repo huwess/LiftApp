@@ -56,6 +56,11 @@ class HomeFragment : Fragment() {
         private const val TAG = "Home"
     }
 
+    override fun onResume() {
+        super.onResume()
+        fetchData()
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         firebaseAuth = FirebaseAuth.getInstance()

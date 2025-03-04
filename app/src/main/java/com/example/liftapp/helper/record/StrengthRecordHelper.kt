@@ -89,7 +89,7 @@ class StrengthRecordHelper {
                     var highestStrengthLevelValue = 0
                     var highestStrengthLevel = "Untrained" // Default value
                     var numberOfRecords = 0
-                    var highestRepsInSingleRecord = 0
+                    var bestReps = 0
                     var highestOneRepMax = 0.0 // Track highest 1-rep max
 
                     // Iterate through all records
@@ -105,13 +105,14 @@ class StrengthRecordHelper {
                         numberOfRecords++
 
                         // Track highest reps in a single record
-                        if (repetitions > highestRepsInSingleRecord) {
-                            highestRepsInSingleRecord = repetitions
-                        }
+//                        if (repetitions > bestReps) {
+//                            bestReps = repetitions
+//                        }
 
                         // Track highest 1-rep max
                         if (oneRepMax > highestOneRepMax) {
                             highestOneRepMax = oneRepMax
+                            bestReps = repetitions
                         }
 
                         // Check for highest strength level
@@ -123,7 +124,7 @@ class StrengthRecordHelper {
                     }
 
                     // Return the results via onSuccess callback
-                    onSuccess(totalRepetitions, totalDuration, highestStrengthLevel, numberOfRecords, highestRepsInSingleRecord, highestOneRepMax)
+                    onSuccess(totalRepetitions, totalDuration, highestStrengthLevel, numberOfRecords, bestReps, highestOneRepMax)
                 } else {
                     // No records found for the user
                     onSuccess(0, 0L, "Untrained", 0, 0, 0.0)
