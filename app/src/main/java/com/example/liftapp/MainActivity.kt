@@ -10,6 +10,8 @@ import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
+import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView
@@ -33,6 +35,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.example.liftapp.helper.users.UserProfileHelper
 import com.example.liftapp.helper.users.UserViewModel
 import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 
 class MainActivity : AppCompatActivity() {
 
@@ -155,6 +158,20 @@ class MainActivity : AppCompatActivity() {
         builder.setView(mview)
         val dialog = builder.create()
 
+        var unit : Int = 0
+
+        val items = listOf("kg", "lb")
+        val adapter = ArrayAdapter(this, R.layout.list_item, items)
+        val dropdownField = mview.findViewById<AutoCompleteTextView>(R.id.dropdown_field)
+        dropdownField.setAdapter(adapter)
+
+        dropdownField.setOnItemClickListener { adapterView, view, i, l ->  }
+
+        dropdownField.setOnItemClickListener { _, _, position, _ ->
+            val selectedUnit = items[position]
+            unit = if(selectedUnit == "kg") 0 else 1
+        }
+
         dialog.setOnCancelListener {
             ttsHelper.speakText("Exercise Cancelled.")
         }
@@ -175,11 +192,11 @@ class MainActivity : AppCompatActivity() {
         val imageView = mview.findViewById<ImageView>(R.id.gif_animation)
 
         Glide.with(mview).asGif().load(R.drawable.dumbbellpress).into(imageView)
+        val inputLayout = mview.findViewById<TextInputLayout>(R.id.input_layout)
         val weightInput = mview.findViewById<TextInputEditText>(R.id.dumbbell_weight)
         val backButton = mview.findViewById<Button>(R.id.back)
         val nextButton = mview.findViewById<Button>(R.id.next)
         val inputContainer = mview.findViewById<LinearLayout>(R.id.input_container)
-        val countdownText = mview.findViewById<TextView>(R.id.countdown_timer)
         nextButton.setBackgroundColor(getColor(R.color.gray))
 
         weightInput.addTextChangedListener(object : TextWatcher{
@@ -189,6 +206,7 @@ class MainActivity : AppCompatActivity() {
 
             override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
                 val isNotEmpty = !p0.isNullOrEmpty()
+                inputLayout.isHelperTextEnabled = false
                 nextButton.isEnabled = isNotEmpty
                 nextButton.setBackgroundColor(if(isNotEmpty) getColor(R.color.calm) else  getColor(R.color.gray))
                 nextButton.alpha = if (isNotEmpty) 1f else 0.5f
@@ -209,37 +227,15 @@ class MainActivity : AppCompatActivity() {
             if (weightText.isNotEmpty()) {
                 try {
                     val weight = weightText.toDouble() // Convert input to Double
-                    inputContainer.visibility = View.GONE
-
+                    val intent = Intent(this@MainActivity, ExerciseActivity::class.java)
+                    intent.putExtra("DUMBBELL_WEIGHT", weight) // Pass the weight as Double
+                    intent.putExtra("UNIT", unit)
+                    startActivity(intent)
+                    dialog.dismiss()
                     // Hide the soft keyboard
-                    val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-                    imm.hideSoftInputFromWindow(weightInput.windowToken, 0)
-                    ttsHelper.speakText("Starting in five seconds")
-                    var countdown = 5
-                    countdownText.visibility = View.VISIBLE
-                    val timer = object : CountDownTimer(5000, 1000) {
-                        override fun onTick(p0: Long) {
-                            countdownText.text = "${countdown--}s"
-                            if(countdown == 2) {
-                                ttsHelper.speakText("Ready in three")
-                            }
-                            if(countdown == 1) {
-                                ttsHelper.speakText("Two")
-                            }
-                            if (countdown == 0) {
-                                ttsHelper.speakText("One. go")
-                            }
-                        }
 
-                        override fun onFinish() {
-                            val intent = Intent(this@MainActivity, ExerciseActivity::class.java)
-                            intent.putExtra("DUMBBELL_WEIGHT", weight) // Pass the weight as Double
-                            startActivity(intent)
-                            dialog.dismiss()
-                        }
+//                    ttsHelper.speakText("Starting in five seconds")
 
-                    }
-                    timer.start()
 
 //                    val intent = Intent(this@MainActivity, ExerciseActivity::class.java)
 //                    intent.putExtra("DUMBBELL_WEIGHT", weight) // Pass as Double
@@ -259,4 +255,5 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
         ttsHelper.release()
     }
+
 }

@@ -60,6 +60,7 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
     private lateinit var stageTextView: TextView
     private lateinit var signTextView: TextView
     private var weight: Double = 0.0
+    private var unitUsed: Int = 0
     private var timer: CountDownTimer? = null
     private var exerciseStartTime: Long = 0L
     private var exerciseTimer: Timer? = null
@@ -130,6 +131,7 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
 
         // Retrieve the passed weight value
         weight = intent.getDoubleExtra("DUMBBELL_WEIGHT", 0.0)
+        unitUsed = intent.getIntExtra("UNIT", 0)
 
 
         val overlayView: OverlayView = binding.cameraContainer.findViewById(R.id.overlay)
@@ -324,8 +326,9 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
 
     private fun startCountdownTimer() {
         binding.countdownTimer.visibility = View.VISIBLE
-        ttsHelper.speakText("Starting in five seconds")
-        val timer = object : CountDownTimer(15000, 1000) {
+        ttsHelper.speakText("Starting in twenty seconds")
+        ttsHelper.speakText("")
+        val timer = object : CountDownTimer(20000, 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 val secondsRemaining = millisUntilFinished / 1000
                 binding.countdownTimer.text = "$secondsRemaining s"
@@ -370,7 +373,7 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
                     val reps_final = repCountTextView.text.toString().toInt()
                     val oneRepMax = calculator.oneRepMaxCalculator(weight, reps_final)
 
-                    val strengthLevel = calculator.assStrengthLvl(userAge, userWeight, unit, oneRepMax, userGender)
+                    val strengthLevel = calculator.assStrengthLvl(userAge, userWeight, oneRepMax, userGender)
                     strengthRecordHelper.saveStrengthRecord(
                         reps_final,
                         weight,

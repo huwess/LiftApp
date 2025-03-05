@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.liftapp.R
 import com.example.liftapp.calendar.CalendarFragment
@@ -16,6 +17,7 @@ import com.example.liftapp.calendar.WeekCalendarAdapter
 import com.example.liftapp.databinding.FragmentHomeBinding
 import com.example.liftapp.helper.calculator.Calculator
 import com.example.liftapp.helper.record.StrengthRecordHelper
+import com.example.liftapp.helper.users.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.Description
@@ -38,6 +40,7 @@ class HomeFragment : Fragment() {
 
     private lateinit var lineChart: LineChart
     private lateinit var xValues: List<String>
+    private val userViewModel: UserViewModel by activityViewModels()
 
 
     override fun onCreateView(
@@ -172,6 +175,8 @@ class HomeFragment : Fragment() {
                 val minutes = TimeUnit.MILLISECONDS.toMinutes(totalDuration)
                 val seconds = TimeUnit.MILLISECONDS.toSeconds(totalDuration) % 60
 
+                Log.d("UNITTesting", "UNIT IS: ${userViewModel.unit.value}")
+
                 fragmentHomeBinding.liftCount.text = totalRepetitions.toString()
                 fragmentHomeBinding.totalMinutes.text = String.format("%d.%d", minutes, seconds)
                 fragmentHomeBinding.currentLevel.text = highestStrengthLevel
@@ -207,6 +212,13 @@ class HomeFragment : Fragment() {
                 fragmentHomeBinding.totalMinutes.text = "null"
             }
         )
+    }
+
+
+    private fun convertByUnit(value: Double): String {
+        if(userViewModel.unit.value == 1) {
+
+        }
     }
 
 
