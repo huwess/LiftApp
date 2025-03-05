@@ -52,15 +52,20 @@ class Calculator {
         return result
     }
 
-    fun assStrengthLvl (age: Int, weight: Double, oneRepMax: Double, gender: String): String {
-
+    fun assStrengthLvl (age: Int, weight: Double, oneRepMax: Double, gender: String, weightUnit: Int, oneRepMaxUnit: Int): String {
         val ageLvl = getAgeLvl(age)
-        val weightLvl = getWeightLvl(weight)
+        val adjustedWeight: Double
+        val adjustedOneRepMax: Double
+
+        if (weightUnit == 1) adjustedWeight = weight / 2.205 else adjustedWeight = weight
+        if (oneRepMaxUnit == 1) adjustedOneRepMax = oneRepMax / 2.205 else adjustedOneRepMax = oneRepMax
+
+        val weightLvl = getWeightLvl(adjustedWeight)
 
         if (gender == "Male") {
-            return getStrengthLvlMaleKg(ageLvl, weightLvl, oneRepMax)
+            return getStrengthLvlMaleKg(ageLvl, weightLvl, adjustedOneRepMax)
         } else {
-            return getStrengthLvlFemaleKg(ageLvl, weightLvl, oneRepMax)
+            return getStrengthLvlFemaleKg(ageLvl, weightLvl, adjustedOneRepMax)
         }
     }
 
