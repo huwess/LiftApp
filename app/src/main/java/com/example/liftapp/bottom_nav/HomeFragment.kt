@@ -169,42 +169,39 @@ class HomeFragment : Fragment() {
 
     @SuppressLint("SetTextI18n", "DefaultLocale")
     private fun fetchData() {
-        strengthRecordHelper.fetchAllRecords(
-            onSuccess = { totalRepetitions, totalDuration, highestStrengthLevel, numberOfRecords, highestRepsInSingleRecord, highestOneRepMax ->
-                // Convert duration to minutes and seconds
-                val minutes = TimeUnit.MILLISECONDS.toMinutes(totalDuration)
-                val seconds = TimeUnit.MILLISECONDS.toSeconds(totalDuration) % 60
+        strengthRecordHelper.fetchHomeData(
+            onSuccess = { totalRepetitions, totalDuration, highestStrengthLevel, numberOfRecords, highestRepsInSingleRecord, highestOneRepMax, weightUnit ->
+                if(totalRepetitions != 0) {
+                    // Convert duration to minutes and seconds
+                    val minutes = TimeUnit.MILLISECONDS.toMinutes(totalDuration)
+                    val seconds = TimeUnit.MILLISECONDS.toSeconds(totalDuration) % 60
 
-                Log.d("UNITTesting", "UNIT IS: ${userViewModel.unit.value}")
+                    Log.d("UNITTesting", "UNIT IS: ${userViewModel.unit.value}")
 
-                fragmentHomeBinding.liftCount.text = totalRepetitions.toString()
-                fragmentHomeBinding.totalMinutes.text = String.format("%d.%d", minutes, seconds)
-                fragmentHomeBinding.currentLevel.text = highestStrengthLevel
-                fragmentHomeBinding.totalRecords.text = String.format("%02d", numberOfRecords)
-                fragmentHomeBinding.bestRepetition.text = String.format("%02d", highestRepsInSingleRecord)
-                fragmentHomeBinding.top1rm.text = String.format("%.2fkg", highestOneRepMax)
+                    fragmentHomeBinding.liftCount.text = totalRepetitions.toString()
+                    fragmentHomeBinding.totalMinutes.text = String.format("%d.%d", minutes, seconds)
+                    fragmentHomeBinding.currentLevel.text = highestStrengthLevel
+                    fragmentHomeBinding.totalRecords.text = String.format("%02d", numberOfRecords)
+                    fragmentHomeBinding.bestRepetition.text = String.format("%02d", highestRepsInSingleRecord)
+                    fragmentHomeBinding.top1rm.text = convertByUnit(highestOneRepMax, weightUnit)
 
-                val w90 = calculator.getPercentageWeight(highestOneRepMax, 0.9)
-                val w80 = calculator.getPercentageWeight(highestOneRepMax, 0.8)
-                val w60 = calculator.getPercentageWeight(highestOneRepMax, 0.6)
-                val w50 = calculator.getPercentageWeight(highestOneRepMax, 0.5)
+                    val w90 = calculator.getPercentageWeight(highestOneRepMax, 0.9)
+                    val w80 = calculator.getPercentageWeight(highestOneRepMax, 0.8)
+                    val w60 = calculator.getPercentageWeight(highestOneRepMax, 0.6)
+                    val w50 = calculator.getPercentageWeight(highestOneRepMax, 0.5)
 
-                //Weight base on percentage
-                fragmentHomeBinding.weight90.text = String.format("%.1fkg", w90)
-                fragmentHomeBinding.weight80.text = String.format("%.1fkg", w80)
-                fragmentHomeBinding.weight60.text = String.format("%.1fkg", w60)
-                fragmentHomeBinding.weight50.text = String.format("%.1fkg", w50)
+                    //Weight base on percentage
+                    fragmentHomeBinding.weight90.text = convertByUnit(w90, weightUnit)
+                    fragmentHomeBinding.weight80.text = convertByUnit(w80, weightUnit)
+                    fragmentHomeBinding.weight60.text = convertByUnit(w60, weightUnit)
+                    fragmentHomeBinding.weight50.text = convertByUnit(w50, weightUnit)
 
-                fragmentHomeBinding.rep90.text = calculator.calculateRepetitions(highestOneRepMax, w90, highestRepsInSingleRecord).toString()
-                fragmentHomeBinding.rep80.text = calculator.calculateRepetitions(highestOneRepMax, w80, highestRepsInSingleRecord).toString()
-                fragmentHomeBinding.rep60.text = calculator.calculateRepetitions(highestOneRepMax, w60, highestRepsInSingleRecord).toString()
-                fragmentHomeBinding.rep50.text = calculator.calculateRepetitions(highestOneRepMax, w50, highestRepsInSingleRecord).toString()
+                    fragmentHomeBinding.rep90.text = calculator.calculateRepetitions(highestOneRepMax, w90, highestRepsInSingleRecord).toString()
+                    fragmentHomeBinding.rep80.text = calculator.calculateRepetitions(highestOneRepMax, w80, highestRepsInSingleRecord).toString()
+                    fragmentHomeBinding.rep60.text = calculator.calculateRepetitions(highestOneRepMax, w60, highestRepsInSingleRecord).toString()
+                    fragmentHomeBinding.rep50.text = calculator.calculateRepetitions(highestOneRepMax, w50, highestRepsInSingleRecord).toString()
+                }
 
-
-
-                // Display the results
-                Log.d("RecordsSummary", "Total Repetitions: $totalRepetitions")
-                Log.d("RecordsSummary", "Total Duration: $minutes minutes $seconds seconds")
             },
             onFailure = { e ->
                 Log.e("RecordsSummary", "Error fetching records: ${e.message}")
@@ -215,9 +212,20 @@ class HomeFragment : Fragment() {
     }
 
 
-    private fun convertByUnit(value: Double): String {
-        if(userViewModel.unit.value == 1) {
-
+    @SuppressLint("DefaultLocale")
+    private fun convertByUnit(value: Double, recordUnit: Int): String {
+        if(userViewModel.unit.value == 0) {
+            if(recordUnit == 1) {
+                return String.format("%.1fkg", calculator.lbToKg(value))
+            } else {
+                return String.format("%.1fkg", value)
+            }
+        } else {
+            if(recordUnit == 0) {
+                return String.format("%.1flb", calculator.kgToLb(value))
+            } else {
+                return String.format("%.1flb", value)
+            }
         }
     }
 

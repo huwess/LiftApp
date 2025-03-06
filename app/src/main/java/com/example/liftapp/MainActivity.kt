@@ -1,6 +1,8 @@
 package com.example.liftapp
 
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.os.CountDownTimer
@@ -13,6 +15,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.Button
+import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -124,7 +127,7 @@ class MainActivity : AppCompatActivity() {
     private fun fetchUserData(userId: String) {
         Log.d("MainActivity", "Calling fetchUserData for userId: $userId")
 
-        userProfileHelper.fetchUserData(userId) { user ->
+        userProfileHelper.fetchUserData() { user ->
             if (user != null) {
                 Log.d("MainActivity", "User data received: $user")
 
@@ -159,18 +162,35 @@ class MainActivity : AppCompatActivity() {
         val dialog = builder.create()
 
         var unit : Int = 0
+        var unitSelected = false // Track if a unit has been selected
 
         val items = listOf("kg", "lb")
         val adapter = ArrayAdapter(this, R.layout.list_item, items)
         val dropdownField = mview.findViewById<AutoCompleteTextView>(R.id.dropdown_field)
+        val inputLayout = mview.findViewById<TextInputLayout>(R.id.input_layout)
+        val weightInput = mview.findViewById<TextInputEditText>(R.id.dumbbell_weight)
+        val backButton = mview.findViewById<Button>(R.id.back)
+        val nextButton = mview.findViewById<Button>(R.id.next)
         dropdownField.setAdapter(adapter)
 
-        dropdownField.setOnItemClickListener { adapterView, view, i, l ->  }
+        dropdownField.setOnItemClickListener { adapterView, view, i, l -> }
+
+        dropdownField.setOnClickListener {
+            hideKeyboard(dropdownField)
+        }
 
         dropdownField.setOnItemClickListener { _, _, position, _ ->
+            unitSelected = true
             val selectedUnit = items[position]
-            unit = if(selectedUnit == "kg") 0 else 1
+            unit = if (selectedUnit == "kg") 0 else 1
+
+            // Check both conditions before enabling the button
+            val isNotEmpty = !weightInput.text.isNullOrEmpty()
+            nextButton.isEnabled = isNotEmpty && unitSelected
+            nextButton.setBackgroundColor(if (nextButton.isEnabled) getColor(R.color.calm) else getColor(R.color.gray))
+            nextButton.alpha = if (nextButton.isEnabled) 1f else 0.5f
         }
+
 
         dialog.setOnCancelListener {
             ttsHelper.speakText("Exercise Cancelled.")
@@ -192,10 +212,7 @@ class MainActivity : AppCompatActivity() {
         val imageView = mview.findViewById<ImageView>(R.id.gif_animation)
 
         Glide.with(mview).asGif().load(R.drawable.dumbbellpress).into(imageView)
-        val inputLayout = mview.findViewById<TextInputLayout>(R.id.input_layout)
-        val weightInput = mview.findViewById<TextInputEditText>(R.id.dumbbell_weight)
-        val backButton = mview.findViewById<Button>(R.id.back)
-        val nextButton = mview.findViewById<Button>(R.id.next)
+
         val inputContainer = mview.findViewById<LinearLayout>(R.id.input_container)
         nextButton.setBackgroundColor(getColor(R.color.gray))
 
@@ -207,9 +224,9 @@ class MainActivity : AppCompatActivity() {
             override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
                 val isNotEmpty = !p0.isNullOrEmpty()
                 inputLayout.isHelperTextEnabled = false
-                nextButton.isEnabled = isNotEmpty
-                nextButton.setBackgroundColor(if(isNotEmpty) getColor(R.color.calm) else  getColor(R.color.gray))
-                nextButton.alpha = if (isNotEmpty) 1f else 0.5f
+                nextButton.isEnabled = isNotEmpty && unitSelected
+                nextButton.setBackgroundColor(if (nextButton.isEnabled) getColor(R.color.calm) else getColor(R.color.gray))
+                nextButton.alpha = if (nextButton.isEnabled) 1f else 0.5f
             }
 
             override fun afterTextChanged(p0: Editable?) {
@@ -256,4 +273,8 @@ class MainActivity : AppCompatActivity() {
         ttsHelper.release()
     }
 
+    fun Context.hideKeyboard(view: View) {
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(view.windowToken, 0)
+    }
 }

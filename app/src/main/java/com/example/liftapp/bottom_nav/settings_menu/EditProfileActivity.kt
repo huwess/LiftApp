@@ -55,7 +55,7 @@ class EditProfileActivity : AppCompatActivity() {
     }
     @SuppressLint("SetTextI18n")
     private fun fetchUserData(userId: String) {
-        userProfileHelper.fetchUserData(userId) { user ->
+        userProfileHelper.fetchUserData() { user ->
             if (user != null) {
                 // Update ViewModel
                 userViewModel.apply {

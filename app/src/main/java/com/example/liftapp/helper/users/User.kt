@@ -6,4 +6,14 @@ data class User(
     var weight: Double = 0.0,
     var gender: String = "",
     var unit: Int = 0
-)
+) {
+    fun toMap(): Map<String, Any> {
+        return mapOf(
+            "name" to name,
+            "age" to age,
+            "weight" to weight,
+            "gender" to gender,
+            "unit" to unit
+        )
+    }
+}

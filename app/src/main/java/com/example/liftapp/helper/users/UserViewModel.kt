@@ -29,7 +29,7 @@ class UserViewModel : ViewModel() {
     fun setUnit(value: Int) { _unit.value = value }
     fun setEmail(value: String?) { _email.value = value } // Setter for email
     fun fetchUserData(userId: String) {
-        userProfileHelper.fetchUserData(userId) { user ->
+        userProfileHelper.fetchUserData() { user ->
             if (user != null) {
                 setName(user.name)
                 setAge(user.age)
