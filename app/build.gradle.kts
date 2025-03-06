@@ -89,4 +89,7 @@ dependencies {
     //GIF Handling
     implementation (libs.glide)
     annotationProcessor (libs.compiler)
+
+    //Calendar
+    implementation (libs.material.calendarview)
 }

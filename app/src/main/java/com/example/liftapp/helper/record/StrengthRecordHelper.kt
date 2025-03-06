@@ -9,6 +9,10 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ServerValue
 import com.google.firebase.database.ValueEventListener
 import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.temporal.WeekFields
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -143,6 +147,94 @@ class StrengthRecordHelper {
                 onFailure(Exception("Failed to fetch records: ${e.message}"))
             }
     }
+
+    fun fetchWeeklyStrengthData(
+        onSuccess: (List<Pair<String, String>>) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        val userId = auth.currentUser?.uid ?: run {
+            onFailure(Exception("User not authenticated"))
+            return
+        }
+
+        val recordsRef = database.getReference("users/$userId/records")
+
+        recordsRef.get().addOnSuccessListener { snapshot ->
+            Log.d("StrengthRecordHelper", "Snapshot exists: ${snapshot.exists()}, Children count: ${snapshot.childrenCount}")
+
+            val weeklyData = mutableMapOf<String, String>()
+            val currentMonth = getCurrentMonth() // Get the current month in "YYYY-MM"
+
+            snapshot.children.forEach { recordSnapshot ->
+                val dateKey = recordSnapshot.child("date").getValue(String::class.java) ?: return@forEach
+                Log.d("StrengthRecordHelper", "Record Date: $dateKey")
+
+                // Ensure the record belongs to the current month
+                if (!dateKey.startsWith(currentMonth)) return@forEach
+
+                val strengthLevelStr = recordSnapshot.child("strengthLevel").getValue(String::class.java) ?: "Unknown"
+                Log.d("StrengthRecordHelper", "Strength Level: $strengthLevelStr")
+
+                val strengthLevelValue = strengthLevelHierarchy[strengthLevelStr] ?: 0
+                val weekNumber = getWeekNumber(dateKey)
+
+                // Compare and store the highest strength level per week
+                val currentMax = strengthLevelHierarchy[weeklyData[weekNumber]] ?: 0
+                if (strengthLevelValue > currentMax) {
+                    weeklyData[weekNumber] = strengthLevelStr
+                }
+            }
+
+            // Convert map to sorted list
+            val sortedWeeklyData = weeklyData.toList().sortedBy { it.first }
+            Log.d("StrengthRecordHelper", "Final weekly data: $sortedWeeklyData")
+            onSuccess(sortedWeeklyData)
+
+        }.addOnFailureListener { e ->
+            onFailure(e)
+        }
+    }
+
+
+    fun getCurrentMonth(): String {
+        val calendar = Calendar.getInstance()
+        val year = calendar.get(Calendar.YEAR)
+        val month = calendar.get(Calendar.MONTH) + 1 // Month is 0-based in Calendar
+        return String.format("%04d-%02d", year, month)
+    }
+
+
+
+    // Helper function to get week number from a date string
+    fun getWeekNumber(dateStr: String): String {
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val date = dateFormat.parse(dateStr) ?: return "Unknown"
+
+        val calendar = Calendar.getInstance().apply {
+            time = date
+        }
+
+        // Get the first Sunday of the month
+        val firstDayCalendar = Calendar.getInstance().apply {
+            set(Calendar.YEAR, calendar.get(Calendar.YEAR))
+            set(Calendar.MONTH, calendar.get(Calendar.MONTH))
+            set(Calendar.DAY_OF_MONTH, 1)
+
+            // Move to the first Sunday of the month
+            while (get(Calendar.DAY_OF_WEEK) != Calendar.SUNDAY) {
+                add(Calendar.DAY_OF_MONTH, 1)
+            }
+        }
+
+        val firstSunday = firstDayCalendar.timeInMillis
+        val daysSinceFirstSunday = ((date.time - firstSunday) / (1000 * 60 * 60 * 24)).toInt()
+        val weekNumber = (daysSinceFirstSunday / 7) + 1
+
+        return "Week $weekNumber"
+    }
+
+
+
 
 
     fun fetchRecordsByDate(

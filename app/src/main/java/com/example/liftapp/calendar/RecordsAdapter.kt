@@ -1,13 +1,18 @@
 package com.example.liftapp.calendar
 
 import android.annotation.SuppressLint
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.liftapp.R
 import com.example.liftapp.helper.record.StrengthRecord
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class RecordsAdapter(private val records: List<StrengthRecord>) :
     RecyclerView.Adapter<RecordsAdapter.RecordViewHolder>() {
@@ -20,16 +25,25 @@ class RecordsAdapter(private val records: List<StrengthRecord>) :
         private val duration: TextView = itemView.findViewById(R.id.duration)
         private val date: TextView = itemView.findViewById(R.id.date)
         private val time: TextView = itemView.findViewById(R.id.time)
+        private val unit: ImageView = itemView.findViewById(R.id.unit)
 
         // Bind the data to the view
-        @SuppressLint("SetTextI18n")
+        @SuppressLint("SetTextI18n", "DefaultLocale")
         fun bind(record: StrengthRecord) {
-            repetitions.text = "Reps: ${record.repetitions}"
-            dumbbellWeight.text = "Weight: ${record.dumbbellWeight}kg"
-            strengthLevel.text = "Level: ${record.strengthLevel}"
-            duration.text = "Duration: ${record.duration}"
-            date.text = "Date: ${record.date}"
-            time.text = "Time: ${record.time}"
+            repetitions.text = "${record.repetitions} reps"
+            dumbbellWeight.text = String.format("%.1f", record.dumbbellWeight)
+            strengthLevel.text = record.strengthLevel
+            duration.text = "${millisecondsToSeconds(record.duration)}s"
+            date.text = stringToDate(record.date)
+            time.text = stringToTime(record.time)
+            if(record.unit == 0) {
+                Log.d("CheckUnit", "${record.unit}")
+                unit.setImageResource(R.drawable.weight_kg)
+            } else {
+                Log.d("CheckUnit", "${record.unit}")
+                unit.setBackgroundResource(R.drawable.weight_lb)
+            }
+
         }
     }
 
@@ -49,5 +63,32 @@ class RecordsAdapter(private val records: List<StrengthRecord>) :
     // Returns the size of the list
     override fun getItemCount(): Int {
         return records.size
+    }
+
+    fun stringToDate(dateString: String): String {
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val outputFormat = SimpleDateFormat("EEE MMM dd yyyy", Locale.getDefault())
+
+        return try {
+            val date = inputFormat.parse(dateString) ?: return "Invalid Date"
+            outputFormat.format(date)
+        } catch (e: Exception) {
+            "Invalid Date"
+        }
+    }
+    private fun millisecondsToSeconds(milliseconds: Long): Long {
+        return milliseconds / 1000
+    }
+
+    fun stringToTime(timeString: String): String {
+        val inputFormat = SimpleDateFormat("HH:mm", Locale.getDefault()) // 24-hour format
+        val outputFormat = SimpleDateFormat("h:mm a", Locale.getDefault()) // 12-hour format with AM/PM
+
+        return try {
+            val date = inputFormat.parse(timeString) ?: return "Invalid Time"
+            outputFormat.format(date)
+        } catch (e: Exception) {
+            "Invalid Time"
+        }
     }
 }

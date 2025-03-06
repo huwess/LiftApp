@@ -1,57 +1,140 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:paddingHorizontal="10dp"
+    android:paddingBottom="5dp"
+    android:paddingTop="10dp"
+    android:elevation="2dp"
+    android:layout_margin="10dp"
+    android:background="@drawable/home_header_rectangle">
 
-    <!-- Repetitions -->
-    <TextView
-        android:id="@+id/repetitions"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Repetitions"
-        android:textSize="16sp" />
+        android:orientation="horizontal">
 
-    <!-- Dumbbell Weight -->
-    <TextView
-        android:id="@+id/dumbbellWeight"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Dumbbell Weight"
-        android:textSize="16sp" />
+        <!-- Repetitions -->
+        <TextView
+            android:id="@+id/repetitions"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:fontFamily="@font/open_sans_medium"
+            android:textColor="@color/dark_gray"
+            android:text="00 reps"
+            android:textSize="14sp" />
 
-    <!-- Strength Level -->
-    <TextView
-        android:id="@+id/strengthLevel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Strength Level"
-        android:textSize="16sp" />
+        <!-- Duration -->
+        <TextView
+            android:id="@+id/duration"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/open_sans_medium"
+            android:text="00.0s"
+            android:textSize="14sp"
+            android:textColor="@color/dark_gray"
+            android:gravity="end"/>
 
-    <!-- Duration -->
-    <TextView
-        android:id="@+id/duration"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Duration"
-        android:textSize="16sp" />
+    </LinearLayout>
 
-    <!-- Date -->
-    <TextView
-        android:id="@+id/date"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Date"
-        android:textSize="14sp"
-        android:textColor="#666666" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:padding="10dp">
 
-    <!-- Time -->
-    <TextView
-        android:id="@+id/time"
-        android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+
+
+
+            <!-- Dumbbell Weight -->
+            <TextView
+                android:id="@+id/dumbbellWeight"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="20"
+                android:textSize="18sp"
+                android:textColor="@color/dark_gray"
+                android:gravity="center"
+                android:layout_gravity="bottom"
+                android:layout_marginRight="5dp"/>
+
+            <ImageView
+                android:id="@+id/unit"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/weight_kg"/>
+        </LinearLayout>
+
+        <com.google.android.material.divider.MaterialDivider
+            android:layout_width="2dp"
+            android:layout_height="match_parent"
+            app:dividerThickness="2dp"
+            app:dividerColor="@color/dark_gray"/>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:layout_marginVertical="5dp">
+            <!-- Strength Level -->
+            <TextView
+                android:id="@+id/strengthLevel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Intermediate"
+                android:textColor="@color/dark_gray"
+                android:textSize="16sp"
+                android:gravity="center"/>
+        </LinearLayout>
+
+
+
+    </LinearLayout>
+
+
+
+
+
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Time"
-        android:textSize="14sp"
-        android:textColor="#666666" />
+        android:orientation="horizontal">
+        <!-- Date -->
+        <TextView
+            android:id="@+id/date"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/open_sans_medium"
+            android:text="2025 03 07"
+            android:textSize="12sp"
+            android:textColor="@color/gray"
+            android:gravity="start"/>
+
+        <!-- Time -->
+        <TextView
+            android:id="@+id/time"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/open_sans_medium"
+            android:text="12:00"
+            android:textSize="12sp"
+            android:textColor="@color/gray"
+            android:gravity="end"/>
+    </LinearLayout>
 
 </LinearLayout>

@@ -1,27 +1,86 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".calendar.CalendarFragment">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".calendar.CalendarFragment"
+    android:background="@color/white"
+    android:paddingBottom="80dp">
 
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:padding="15dp">
-        <CalendarView
-            android:id="@+id/calendarView"
+        android:fillViewport="true"
+
+        >
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
-        <!-- res/layout/fragment_calendar.xml -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recordsRecyclerView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="15dp">
 
-    </LinearLayout>
+            <!-- Header Section -->
+            <LinearLayout
+                android:id="@+id/headerSection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="0dp"
+                android:layout_marginBottom="20dp">
+
+                <ImageButton
+                    android:id="@+id/backButton"
+                    android:layout_width="45dp"
+                    android:layout_height="45dp"
+                    android:src="@drawable/backbtn"
+                    android:padding="0dp"
+                    android:background="@color/white" />
+
+                <TextView
+                    android:id="@+id/title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="45dp"
+                    android:fontFamily="@font/open_sans_semibold"
+                    android:gravity="center"
+                    android:text="Records"
+                    android:textSize="18sp"
+                    android:layout_marginStart="10dp"
+                    android:textColor="@color/dark_gray"/>
+            </LinearLayout>
+
+
+            <com.prolificinteractive.materialcalendarview.MaterialCalendarView
+                android:id="@+id/calendarView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:mcv_selectionColor="@color/primary"
+                app:mcv_headerTextAppearance="@style/CalendarHeaderTextAppearance"
+                app:mcv_weekDayTextAppearance="@style/CalendarWeekDayTextAppearance" />
+            <!-- res/layout/fragment_calendar.xml -->
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/open_sans_semibold"
+                android:text="Records"
+                android:textColor="@color/dark_gray"
+                android:textSize="16sp"
+                android:layout_marginBottom="10dp"/>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recordsRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+                app:spanCount="2"
+                />
 
 
 
-</RelativeLayout>
+        </LinearLayout>
+    </ScrollView>
+
+
+
+</FrameLayout>

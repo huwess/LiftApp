@@ -32,6 +32,15 @@ import java.util.concurrent.TimeUnit
 
 class HomeFragment : Fragment() {
 
+    private val strengthLevelHierarchy = mapOf(
+        "Elite" to 5,
+        "Advanced" to 4,
+        "Intermediate" to 3,
+        "Novice" to 2,
+        "Untrained" to 1,
+        "Unknown" to 0
+    )
+
     private lateinit var firebaseAuth: FirebaseAuth
     private var _fragmentHomeBinding: FragmentHomeBinding? = null
     private val fragmentHomeBinding get() = _fragmentHomeBinding!!
@@ -70,79 +79,55 @@ class HomeFragment : Fragment() {
         strengthRecordHelper = StrengthRecordHelper()
         calculator = Calculator()
         fetchData()
-        val description =  Description()
-        description.text = "Strength Level"
-        description.setPosition(160f, 20f)
-        fragmentHomeBinding.chart.description = description
-        fragmentHomeBinding.chart.axisRight.setDrawLabels(false)
 
-        val xValues = arrayOf( "Untrained", "Novice", "Intermediate", "Advance", "Elite")
-        var xAxis = XAxis()
-        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM)
-        xAxis.setAxisMinimum(0f)
-        xAxis.setAxisMaximum(30f)
-        xAxis.axisLineWidth = 1f
-        xAxis.axisLineColor = Color.BLACK
-        xAxis.setLabelCount(30)
-        xAxis.setGranularity(1f)
-        xAxis.setAvoidFirstLastClipping(true)
+        setupChart()
+
+        // Fetch and update chart with real data
+        strengthRecordHelper.fetchWeeklyStrengthData(
+            onSuccess = { weeklyData ->
+                updateChart(weeklyData)
+            },
+            onFailure = { e ->
+                Log.e("HomeFragment", "Failed to fetch weekly strength data: ${e.message}")
+            }
+        )
 
 
-        var yAxis = YAxis()
-//        yAxis.setAxisMinimum(0f)
-//        yAxis.setAxisMaximum(100f)
-//        yAxis.setAxisLineWidth(2f)
-//        yAxis.setAxisLineColor(Color.BLACK)
-//        yAxis.setLabelCount(10)
-        yAxis = fragmentHomeBinding.chart.axisLeft
-        yAxis.valueFormatter = IndexAxisValueFormatter(xValues)
-        yAxis.setLabelCount(6)
-        yAxis.setGranularity(1f)
+//        val description =  Description()
+//        description.text = "Strength Level"
+//        description.setPosition(160f, 20f)
+//        fragmentHomeBinding.chart.description = description
+//        fragmentHomeBinding.chart.axisRight.setDrawLabels(false)
 
-        val entries1 = ArrayList<Entry>()
-        entries1.add(Entry(0F, 1f))
-        entries1.add(Entry(1F, 2f))
-        entries1.add(Entry(2F, 3f))
-        entries1.add(Entry(3F, 4f))
-        entries1.add(Entry(4F, 5f))
-        entries1.add(Entry(5F, 5f))
-        entries1.add(Entry(6F, 5f))
-        entries1.add(Entry(7F, 5f))
-        entries1.add(Entry(8F, 5f))
-        entries1.add(Entry(9F, 5f))
-        entries1.add(Entry(10F, 5f))
-        entries1.add(Entry(11F, 5f))
-        entries1.add(Entry(12F, 5f))
-        entries1.add(Entry(13F, 5f))
-        entries1.add(Entry(14F, 5f))
-        entries1.add(Entry(15F, 5f))
-        entries1.add(Entry(16F, 5f))
-        entries1.add(Entry(17F, 5f))
-        entries1.add(Entry(18F, 5f))
-        entries1.add(Entry(18F, 5f))
-        entries1.add(Entry(19F, 5f))
-        entries1.add(Entry(20F, 5f))
-        entries1.add(Entry(21F, 5f))
-        entries1.add(Entry(22F, 5f))
-        entries1.add(Entry(23F, 5f))
-        entries1.add(Entry(24F, 5f))
-        entries1.add(Entry(25F, 5f))
-        entries1.add(Entry(26F, 5f))
-        entries1.add(Entry(27F, 5f))
-        entries1.add(Entry(28F, 5f))
-        entries1.add(Entry(29F, 5f))
-        entries1.add(Entry(30F, 5f))
+//        val xValues = arrayOf( "Untrained", "Novice", "Intermediate", "Advance", "Elite")
+//        var xAxis = XAxis()
+//        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM)
+//        xAxis.setAxisMinimum(0f)
+//        xAxis.setAxisMaximum(30f)
+//        xAxis.axisLineWidth = 1f
+//        xAxis.axisLineColor = Color.BLACK
+//        xAxis.setLabelCount(30)
+//        xAxis.setGranularity(1f)
+//        xAxis.setAvoidFirstLastClipping(true)
+//
+//
+//        var yAxis = YAxis()
+////        yAxis.setAxisMinimum(0f)
+////        yAxis.setAxisMaximum(100f)
+////        yAxis.setAxisLineWidth(2f)
+////        yAxis.setAxisLineColor(Color.BLACK)
+////        yAxis.setLabelCount(10)
+//        yAxis = fragmentHomeBinding.chart.axisLeft
+//        yAxis.valueFormatter = IndexAxisValueFormatter(xValues)
+//        yAxis.setLabelCount(6)
+//        yAxis.setGranularity(1f)
 
 
 
 
 
-        val dataSet1 = LineDataSet(entries1, "Progress")
-        dataSet1.setColor(Color.BLUE);
 
-        val lineData = LineData(dataSet1)
-        fragmentHomeBinding.chart.setData(lineData)
-        fragmentHomeBinding.chart.invalidate()
+
 
         // Get current week data
         val currentWeek = CurrentWeekData()
@@ -228,6 +213,83 @@ class HomeFragment : Fragment() {
             }
         }
     }
+
+
+
+    //GRAPH
+    private fun setupChart() {
+//        val description = Description()
+//        description.text = "Weekly Strength Progress"
+//        description.setPosition(270f, 20f)
+        fragmentHomeBinding.chart.description.isEnabled = false
+        fragmentHomeBinding.chart.description.textSize = 8f
+        fragmentHomeBinding.chart.axisRight.setDrawLabels(false)
+        fragmentHomeBinding.chart.axisLeft.setDrawGridLines(false)
+        fragmentHomeBinding.chart.setScaleEnabled(false)
+        fragmentHomeBinding.chart.setPinchZoom(false)
+        fragmentHomeBinding.chart.extraTopOffset = 20f
+        fragmentHomeBinding.chart.xAxis.setDrawGridLines(false)
+
+        // Set up the X-Axis (Weeks)
+        val xAxis = fragmentHomeBinding.chart.xAxis
+        xAxis.position = XAxis.XAxisPosition.BOTTOM
+        xAxis.granularity = 1f
+        xAxis.setDrawGridLines(false)
+        xAxis.valueFormatter = IndexAxisValueFormatter(arrayOf("", "Week 1", "Week 2", "Week 3", "Week 4"))  // Label weeks
+
+        // Set up the Y-Axis (Strength Levels, excluding "Unknown")
+        val strengthLevels = arrayOf("Unknown","Untrained", "Novice", "Intermediate", "Advanced", "Elite")
+        val yAxis = fragmentHomeBinding.chart.axisLeft
+        yAxis.axisMinimum = 0f  // Start at "Untrained" (1)
+        yAxis.axisMaximum = 5f  // Up to "Elite" (5)
+        yAxis.granularity = 1f
+        yAxis.setLabelCount(strengthLevels.size, true)
+        yAxis.valueFormatter = IndexAxisValueFormatter(strengthLevels) // Label strength levels
+
+        fragmentHomeBinding.chart.invalidate()
+    }
+
+    private fun updateChart(weeklyData: List<Pair<String, String>>) {
+        if (weeklyData.isEmpty()) {
+            Log.e("HomeFragment", "weeklyData is empty, no data to display.")
+            return
+        }
+
+        val entries = ArrayList<Entry>()
+
+        weeklyData.forEach { (week, strengthLevel) ->
+            val weekNumber = week.replace("Week ", "").toFloatOrNull()
+            val strengthValue = strengthLevelHierarchy[strengthLevel]
+
+            Log.d("HomeFragment", "Processing: Week = $week, Strength Level = $strengthLevel")
+
+            if (weekNumber != null && strengthValue != null && strengthValue > 0) {
+                entries.add(Entry(weekNumber, strengthValue.toFloat()))
+            } else {
+                Log.e("HomeFragment", "Skipping invalid entry: week=$weekNumber, strength=$strengthValue")
+            }
+        }
+
+        if (entries.isEmpty()) {
+            Log.e("HomeFragment", "No valid entries to display on the chart.")
+            return
+        }
+
+        val dataSet = LineDataSet(entries, "Weekly Strength Level")
+        dataSet.color = Color.BLUE
+        dataSet.valueTextSize = 12f
+        dataSet.setCircleColor(Color.RED)
+        dataSet.setDrawCircleHole(false)
+
+        val lineData = LineData(dataSet)
+        if (fragmentHomeBinding.chart.data != null) {
+            fragmentHomeBinding.chart.data.clearValues()
+        }
+        fragmentHomeBinding.chart.data = lineData
+        fragmentHomeBinding.chart.invalidate()
+    }
+
+
 
 
 

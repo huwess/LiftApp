@@ -2,11 +2,16 @@ package com.example.liftapp.calendar
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.text.style.ForegroundColorSpan
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
+import android.widget.TextView
+import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.GridLayoutManager
 import com.example.liftapp.databinding.FragmentCalendarBinding
 import com.example.liftapp.helper.record.StrengthRecord
 import java.util.Calendar
@@ -14,6 +19,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.liftapp.R
 import com.example.liftapp.helper.record.StrengthRecordHelper
+import com.prolificinteractive.materialcalendarview.CalendarDay
+import com.prolificinteractive.materialcalendarview.DayViewDecorator
+import com.prolificinteractive.materialcalendarview.DayViewFacade
 
 class CalendarFragment : Fragment() {
 
@@ -47,14 +55,39 @@ class CalendarFragment : Fragment() {
         Log.d(TAG, "onViewCreated: Setting up views")
 
         // Set up the CalendarView to show the current date
-        binding.calendarView.date = System.currentTimeMillis()  // Set to current date by default
+
+        binding.calendarView.currentDate = CalendarDay.today()  // Set to current date by default
+        binding.calendarView.setDateSelected(CalendarDay.today(), true)
+        binding.calendarView.setWeekDayLabels(arrayOf("S", "M", "T", "W", "T", "F", "S"))
+
+//        try {
+//            val field = binding.calendarView.javaClass.getDeclaredField("mHeaderTextView")
+//            field.isAccessible = true
+//            val headerTextView = field.get(binding.calendarView) as TextView
+//            headerTextView.setTextColor(ContextCompat.getColor(requireContext(), R.color.dark_gray))
+//        } catch (e: Exception) {
+//            Log.e(TAG, "Error setting header text color", e)
+//        }
+        binding.calendarView.addDecorators(OneDayDecorator())
         Log.d(TAG, "onViewCreated: CalendarView date set to current time")
 
-        // Initialize RecyclerView
-        recyclerView = view.findViewById(R.id.recordsRecyclerView)
-        recyclerView.layoutManager = LinearLayoutManager(context)  // Use LinearLayoutManager for vertical list
-        recordsAdapter = RecordsAdapter(emptyList())  // Initially empty list
-        recyclerView.adapter = recordsAdapter
+
+
+        binding.backButton.setOnClickListener {
+            requireActivity().onBackPressedDispatcher.onBackPressed()
+        }
+
+        binding.recordsRecyclerView.apply {
+            layoutManager = LinearLayoutManager(context)
+            adapter = RecordsAdapter(emptyList())
+            setHasFixedSize(true)
+        }
+
+//        // Initialize RecyclerView
+//        recyclerView = view.findViewById(R.id.recordsRecyclerView)
+//        recyclerView.layoutManager = LinearLayoutManager(context)  // Use LinearLayoutManager for vertical list
+//        recordsAdapter = RecordsAdapter(emptyList())  // Initially empty list
+//        recyclerView.adapter = recordsAdapter
 
         val currentMonth = getCurrentMonth()
         val currentYear = getCurrentYear()
@@ -66,11 +99,10 @@ class CalendarFragment : Fragment() {
         fetchRecordsForSelectedDay(currentYear, currentMonth, currentDay)
 
         // Listen for date selection (this is the correct place to listen for clicks on specific days)
-        binding.calendarView.setOnDateChangeListener { _, year, month, dayOfMonth ->
-            // Log the date being clicked
-            Log.d(TAG, "onViewCreated: CalendarView date clicked - Year: $year, Month: ${month + 1}, Day: $dayOfMonth")
-
-            // When a date is selected, we fetch the records for that day
+        binding.calendarView.setOnDateChangedListener { widget, date, selected ->
+            val year = date.year
+            val month = date.month    // Note: this is 1-indexed (January = 1)
+            val dayOfMonth = date.day
             fetchRecordsForSelectedDay(year, month, dayOfMonth)
         }
 
@@ -107,7 +139,7 @@ class CalendarFragment : Fragment() {
         Log.d(TAG, "displayRecords: Updating RecyclerView with records - Size: ${records.size}")
         // Update the RecyclerView's adapter with the new list of records
         recordsAdapter = RecordsAdapter(records)
-        recyclerView.adapter = recordsAdapter  // Set the updated adapter
+        binding.recordsRecyclerView.adapter = recordsAdapter  // Set the updated adapter
 
         // Optionally, call notifyDataSetChanged() if you need to explicitly refresh the adapter
         recordsAdapter.notifyDataSetChanged()
@@ -133,5 +165,19 @@ class CalendarFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _fragmentCalendarBinding = null
+    }
+}
+
+class OneDayDecorator : DayViewDecorator {
+    private val today: CalendarDay = CalendarDay.today()
+
+    override fun shouldDecorate(day: CalendarDay): Boolean {
+        return day == today
+    }
+
+    @SuppressLint("ResourceAsColor")
+    override fun decorate(view: DayViewFacade) {
+        // Change the text color to red for today's date
+        view.addSpan(ForegroundColorSpan(R.color.primary))
     }
 }
