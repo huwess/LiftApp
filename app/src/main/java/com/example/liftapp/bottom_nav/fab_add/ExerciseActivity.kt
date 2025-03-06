@@ -106,6 +106,7 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
         super.onDestroy()
 
 //        ttsHelper.release()
+
         backgroundExecutor.shutdown()
         backgroundExecutor.awaitTermination(
             Long.MAX_VALUE, TimeUnit.NANOSECONDS
@@ -144,7 +145,7 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
             setUpCamera()
         }
         Handler(Looper.getMainLooper()).postDelayed({
-            ttsHelper.speakText("Starting in twenty seconds")
+            ttsHelper.speakText("Starting in thirty seconds")
             startCountdownTimer()
         }, 1000)
 
@@ -153,6 +154,7 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
 
 
         binding.stopButton.setOnClickListener {
+            ttsHelper.stopSpeaking()
             ttsHelper.speakText("Exercise Cancelled.")
             finish()
         }
@@ -337,8 +339,12 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
             override fun onTick(millisUntilFinished: Long) {
                 val secondsRemaining = millisUntilFinished / 1000
                 binding.countdownTimer.text = "$secondsRemaining s"
-                if(secondsRemaining == 20L) {
 
+                if(secondsRemaining == 11L) {
+                    ttsHelper.speakText("Ready in ten seconds")
+                }
+                if(secondsRemaining == 2L) {
+                    ttsHelper.speakText("Ready in three! two! one! Go!")
                 }
             }
 
