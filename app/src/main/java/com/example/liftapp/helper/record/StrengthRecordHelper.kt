@@ -52,7 +52,16 @@ class StrengthRecordHelper {
         val recordsRef = database.getReference("users/$userId/records")
         val newRecordRef = recordsRef.push() // Generates a unique key
 
-        val record = StrengthRecord(repetitions, dumbbellWeight, oneRepMax, strengthLevel, duration, unit, date, time)
+        val record = StrengthRecord(
+            repetitions,
+            dumbbellWeight,
+            oneRepMax,
+            strengthLevel,
+            duration,
+            unit,
+            date,
+            time
+        )
 
         newRecordRef.setValue(record)
             .addOnSuccessListener { onSuccess() }
@@ -106,7 +115,8 @@ class StrengthRecordHelper {
                             }
 
                             // Determine highest strength level
-                            val currentStrengthLevelValue = strengthLevelHierarchy[record.strengthLevel] ?: 1
+                            val currentStrengthLevelValue =
+                                strengthLevelHierarchy[record.strengthLevel] ?: 1
                             if (currentStrengthLevelValue > highestStrengthLevelValue) {
                                 highestStrengthLevelValue = currentStrengthLevelValue
                                 highestStrengthLevel = record.strengthLevel
@@ -115,7 +125,15 @@ class StrengthRecordHelper {
                     }
 
                     // Return collected stats
-                    onSuccess(totalRepetitions, totalDuration, highestStrengthLevel, numberOfRecords, bestRep, highestOneRepMax, weightUnit)
+                    onSuccess(
+                        totalRepetitions,
+                        totalDuration,
+                        highestStrengthLevel,
+                        numberOfRecords,
+                        bestRep,
+                        highestOneRepMax,
+                        weightUnit
+                    )
                 } else {
                     // No records found
                     onSuccess(0, 0L, "Unknown", 0, 0, 0.0, 0)
@@ -159,5 +177,70 @@ class StrengthRecordHelper {
             }
         })
     }
+
+    fun getRecordsForMonth(year: Int, month: Int, day: Int, onSuccess: (List<StrengthRecord>) -> Unit) {
+        // Convert the year, month, and day to a string in the format "yyyy-MM-dd"
+//        val dayString = String.format("%04d-%02d-%02d", year, month + 1, day) // e.g., "2025-03-06"
+//
+//        Log.d("FirebaseDebug", "Converted day string: $dayString")
+//
+//        val recordsList = mutableListOf<StrengthRecord>()
+//        Log.d("FirebaseDebug", "Fetching records for day $dayString for user ID: ${auth.currentUser?.uid}")
+//
+//        // Fetch records for the specific day using fetchRecordsByDate
+//        fetchRecordsByDate(dayString, { records ->
+//            records.forEach { record ->
+//                // Log the record's date
+//                Log.d("FirebaseDebug", "Record date: ${record.date}")
+//
+//                // Extract the month part of the record's date (e.g., "2025-03-07" -> "03")
+//                val recordMonth = record.date.substring(5, 7)  // Extract MM from yyyy-MM-dd
+//
+//                Log.d("FirebaseDebug", "Extracted record month: $recordMonth")
+//
+//                // Compare the month part of the record's date (MM) with the requested month (MM)
+//                if (recordMonth == String.format("%02d", month + 1)) {
+//                    Log.d("FirebaseDebug", "Record month matches the requested month: ${record.date}")
+//                    recordsList.add(record)
+//                }
+//            }
+//
+//            if (recordsList.isEmpty()) {
+//                Log.d("FirebaseDebug", "No records found for this month")
+//            }
+//
+//            onSuccess(recordsList)
+//        }, { error ->
+//            Log.e("FirebaseDebug", "Error fetching records for month: ${error.message}")
+//        })
+    }
+
+    // Fetch records for a specific day (in UTC)
+    fun getRecordsForDay(year: Int, month: Int, day: Int, onSuccess: (List<StrengthRecord>) -> Unit) {
+        // Convert the year, month, and day to a string in the format "yyyy-MM-dd"
+        val dayString = String.format("%04d-%02d-%02d", year, month + 1, day) // e.g., "2025-03-06"
+
+        // Log the converted day string
+        Log.d("FirebaseDebug", "Converted day string: $dayString")
+
+        val recordsList = mutableListOf<StrengthRecord>()
+        Log.d("FirebaseDebug", "Fetching records for day $dayString for user ID: ${auth.currentUser?.uid}")
+
+        // Fetch records for the specific day using fetchRecordsByDate
+        fetchRecordsByDate(dayString, { records ->
+            records.forEach { record ->
+                // Log the record's date and check if it matches the dayString (e.g., "2025-03-06")
+                Log.d("FirebaseDebug", "Record date: ${record.date}")
+                if (record.date == dayString) {
+                    Log.d("FirebaseDebug", "Record date matches the day string: ${record.date}")
+                    recordsList.add(record)
+                }
+            }
+            onSuccess(recordsList)
+        }, { error ->
+            Log.e("FirebaseDebug", "Error fetching records for day: ${error.message}")
+        })
+    }
+
 
 }
