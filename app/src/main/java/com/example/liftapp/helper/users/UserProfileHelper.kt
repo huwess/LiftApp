@@ -28,7 +28,7 @@ class UserProfileHelper {
 
 
             val user = User(name, age, weight, gender, unit)
-            usersRef.child(userId).setValue(user)
+            usersRef.child(userId).updateChildren(user.toMap())
                 .addOnSuccessListener {
                     Log.d("UserProfileHelper", "Data successfully saved to Firebase")
                     callback(true, null)
@@ -43,21 +43,26 @@ class UserProfileHelper {
         }
     }
 
-    fun fetchUserData(userId: String, callback: (User?) -> Unit) {
+    fun fetchUserData(callback: (User?) -> Unit) {
+        val currentUser = auth.currentUser
+        if (currentUser == null) {
+            Log.e("UserProfileHelper", "User not authenticated")
+            callback(null)
+            return
+        }
+
+        val userId = currentUser.uid
         Log.d("UserProfileHelper", "Fetching data for userId: $userId")
 
         usersRef.child(userId).addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 if (snapshot.exists()) {
-                    Log.d("UserProfileHelper", "Data snapshot exists: $snapshot")
-
                     val user = snapshot.getValue(User::class.java)
-
                     if (user != null) {
                         Log.d("UserProfileHelper", "User data retrieved: $user")
                         callback(user)
                     } else {
-                        Log.e("UserProfileHelper", "User is null after deserialization")
+                        Log.e("UserProfileHelper", "User data is null after deserialization")
                         callback(null)
                     }
                 } else {
@@ -72,6 +77,7 @@ class UserProfileHelper {
             }
         })
     }
+
 
     fun updateUserData(
         userId: String,

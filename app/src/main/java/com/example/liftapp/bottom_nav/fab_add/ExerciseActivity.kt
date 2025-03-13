@@ -105,6 +105,8 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
     override fun onDestroy() {
         super.onDestroy()
 
+//        ttsHelper.release()
+
         backgroundExecutor.shutdown()
         backgroundExecutor.awaitTermination(
             Long.MAX_VALUE, TimeUnit.NANOSECONDS
@@ -118,6 +120,7 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
 //        enableEdgeToEdge()
         binding = ActivityExerciseBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         ttsHelper = TextToSpeechHelper(this)
         userProfileHelper = UserProfileHelper()
         strengthRecordHelper = StrengthRecordHelper()
@@ -141,13 +144,17 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
         binding.viewFinder.post {
             setUpCamera()
         }
+        Handler(Looper.getMainLooper()).postDelayed({
+            ttsHelper.speakText("Starting in thirty seconds")
+            startCountdownTimer()
+        }, 1000)
 
-        startCountdownTimer()
 
 
 
 
         binding.stopButton.setOnClickListener {
+            ttsHelper.stopSpeaking()
             ttsHelper.speakText("Exercise Cancelled.")
             finish()
         }
@@ -205,7 +212,7 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
         signTextView.text = sign
     }
     private fun triggerSpeech(sign: String) {
-        ttsHelper.stopSpeaking() // Takes advantage of existing stopSpeaking()
+//        ttsHelper.stopSpeaking() // Takes advantage of existing stopSpeaking()
         ttsHelper.speakText(sign)
         lastSpeechTime = System.currentTimeMillis()
         isSpeechPending = false
@@ -326,12 +333,19 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
 
     private fun startCountdownTimer() {
         binding.countdownTimer.visibility = View.VISIBLE
-        ttsHelper.speakText("Starting in twenty seconds")
-        ttsHelper.speakText("")
-        val timer = object : CountDownTimer(20000, 1000) {
+
+        ttsHelper.speakText("Please stand within the camera’s view, making sure your whole body is visible on the screen for a better result. Adjust your position if needed before we begin.")
+        val timer = object : CountDownTimer(30000, 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 val secondsRemaining = millisUntilFinished / 1000
                 binding.countdownTimer.text = "$secondsRemaining s"
+
+                if(secondsRemaining == 11L) {
+                    ttsHelper.speakText("Ready in ten seconds")
+                }
+                if(secondsRemaining == 2L) {
+                    ttsHelper.speakText("Ready in three! two! one! Go!")
+                }
             }
 
             override fun onFinish() {
@@ -341,7 +355,7 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
                 isPoseDetectionActive = true
 
 
-
+                ensureExecutorActive()
                 // Initialize PoseLandmarkerHelper only after countdown
                 backgroundExecutor.execute {
                     poseLandmarkerHelper = PoseLandmarkerHelper(
@@ -363,7 +377,7 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
     private fun calculateAndSaveRecord(weight : Double) {
         val duration = stopExerciseTimer()
         firebaseAuth.currentUser?.let {
-            userProfileHelper.fetchUserData(it.uid) { user ->
+            userProfileHelper.fetchUserData() { user ->
                 if(user != null) {
                     val userWeight = user.weight
                     val userAge = user.age
@@ -373,20 +387,21 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
                     val reps_final = repCountTextView.text.toString().toInt()
                     val oneRepMax = calculator.oneRepMaxCalculator(weight, reps_final)
 
-                    val strengthLevel = calculator.assStrengthLvl(userAge, userWeight, oneRepMax, userGender)
+                    val strengthLevel = calculator.assStrengthLvl(userAge, userWeight, oneRepMax, userGender, unit, unitUsed)
                     strengthRecordHelper.saveStrengthRecord(
                         reps_final,
                         weight,
                         oneRepMax,
                         strengthLevel,
                         duration,
+                        unitUsed,
                         onSuccess = {
                             ttsHelper.speakText("Exercise Completed")
                             finish()
                         },
-                        onFailure = { error ->
+                        onFailure = { exception  ->
                             ttsHelper.speakText("Failed to save exercise record.")
-                            error.printStackTrace()
+                            exception.printStackTrace()
                         }
                     )
                 } else {
@@ -414,6 +429,12 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
     private fun stopExerciseTimer(): Long {
         exerciseTimer?.cancel()
         return System.currentTimeMillis() - exerciseStartTime
+    }
+
+    private fun ensureExecutorActive() {
+        if (backgroundExecutor.isShutdown || backgroundExecutor.isTerminated) {
+            backgroundExecutor = Executors.newSingleThreadExecutor()
+        }
     }
 
 }
