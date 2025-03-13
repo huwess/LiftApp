@@ -86,6 +86,9 @@ dependencies {
     // MediaPipe Library
     implementation(libs.tasks.vision)
 
+    implementation(libs.androidx.viewpager2)
+    implementation(libs.material.v130)
+
     //GIF Handling
     implementation (libs.glide)
     annotationProcessor (libs.compiler)

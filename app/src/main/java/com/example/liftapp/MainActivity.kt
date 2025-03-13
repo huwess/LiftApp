@@ -1,11 +1,9 @@
 package com.example.liftapp
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.os.CountDownTimer
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -15,24 +13,20 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.Button
-import android.widget.EditText
-import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.isVisible
-import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
 import com.example.liftapp.databinding.ActivityMainBinding
 import com.example.liftapp.bottom_nav.HomeFragment
 import com.example.liftapp.bottom_nav.SettingsFragment
 import com.example.liftapp.bottom_nav.fab_add.ExerciseActivity
+import com.example.liftapp.exercise.ExerciseCarouselFragment
 import com.example.liftapp.helper.audio.TextToSpeechHelper
 import com.google.firebase.auth.FirebaseAuth
 import com.example.liftapp.helper.users.UserProfileHelper
@@ -78,7 +72,7 @@ class MainActivity : AppCompatActivity() {
         }
 
 
-        replaceFragment(HomeFragment())
+        replaceFragment(ExerciseCarouselFragment())
 
 
 
@@ -144,7 +138,16 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    private fun replaceFragment(fragment: Fragment) {
+    fun replaceFragment(fragment: Fragment) {
+        // Check if the fragment is ExerciseCarouselFragment
+        if (fragment is ExerciseCarouselFragment) {
+            binding.bottomNavigationView.visibility = View.GONE // Hide the bottom navigation bar
+            binding.fabButton.visibility = View.GONE // Hide the FAB when ExerciseCarouselFragment is shown
+        } else {
+            binding.bottomNavigationView.visibility = View.VISIBLE // Show the bottom navigation bar for other fragments
+            binding.fabButton.visibility = View.VISIBLE // Show the FAB for other fragments
+        }
+
         supportFragmentManager.beginTransaction()
             .replace(R.id.frame_layout, fragment)
             .addToBackStack(null)  // Add this line
