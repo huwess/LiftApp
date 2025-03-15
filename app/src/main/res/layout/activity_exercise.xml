@@ -34,7 +34,7 @@
         android:layout_alignParentTop="true"
         android:layout_alignParentStart="true"
         android:layout_alignParentEnd="true"
-        android:layout_marginTop="30dp"
+        android:layout_marginTop="20dp"
         android:gravity="center"
         android:visibility="gone"
         android:layout_marginHorizontal="20dp">
@@ -79,7 +79,7 @@
                 android:fontFamily="@font/open_sans_bold"
                 android:text="00:00"
                 android:textColor="@color/dark_gray"
-                android:textSize="30sp" />
+                android:textSize="18sp" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"
@@ -108,58 +108,68 @@
 
     </LinearLayout>
 
-    <TableLayout
-        android:visibility="invisible"
+
+
+    <LinearLayout
+        android:id="@+id/indicators"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="20dp"
-        android:layout_below="@+id/timer_layout">
+        android:layout_alignTop="@+id/timer_layout"
+        android:layout_marginTop="100dp"
+        android:orientation="vertical"
+        android:visibility="gone">
 
-        <TableRow>
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/indicators_rectangle"
+            android:orientation="horizontal"
+            android:padding="5dp"
+            android:layout_marginHorizontal="15dp">
+
             <TextView
-                android:text="Rep:"
-                android:textColor="@color/Red"
-                android:padding="2dp"
-                android:textSize="24sp"
-                />
-            <TextView
-                android:text="0"
-                android:textColor="@color/Red"
-                android:padding="2dp"
-                android:textSize="24sp"
-                />
-        </TableRow>
-        <TableRow>
-            <TextView
-                android:text="Stage:"
-                android:textColor="@color/Red"
-                android:padding="2dp"
-                android:textSize="24sp"
-                />
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/open_sans_semibold"
+                android:text="Stage: "
+                android:textColor="@color/white"
+                android:textSize="18sp" />
             <TextView
                 android:id="@+id/stage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/open_sans_semibold"
                 android:text=""
-                android:textColor="@color/Red"
-                android:padding="2dp"
-                android:textSize="24sp"
-                />
-        </TableRow>
-        <TableRow>
+                android:textColor="@color/white"
+                android:textSize="18sp" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/indicators_rectangle"
+            android:orientation="horizontal"
+            android:padding="5dp"
+            android:layout_marginHorizontal="15dp"
+            android:layout_marginTop="5dp">
+
             <TextView
-                android:text="Sign:"
-                android:textColor="@color/Red"
-                android:padding="2dp"
-                android:textSize="24sp"
-                />
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/open_sans_semibold"
+                android:text="Feedback: "
+                android:textColor="@color/white"
+                android:textSize="18sp" />
             <TextView
-                android:id="@+id/sign"
+                android:id="@+id/feedback"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/open_sans_semibold"
                 android:text=""
-                android:textColor="@color/Red"
-                android:padding="2dp"
-                android:textSize="24sp"
-                />
-        </TableRow>
-    </TableLayout>
+                android:textColor="@color/white"
+                android:textSize="18sp" />
+        </LinearLayout>
+
+    </LinearLayout>
 
     <com.example.liftapp.bottom_nav.fab_add.OverlayView
         android:id="@+id/overlay"
@@ -177,6 +187,18 @@
         android:textColor="@color/gray"
         android:textSize="64sp"
         android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/distance"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:fontFamily="@font/open_sans_semibold"
+        android:gravity="center"
+        android:text="0"
+        android:textColor="@color/gray"
+        android:textSize="64sp"
+        android:visibility="visible" />
 
     <LinearLayout
         android:layout_width="match_parent"

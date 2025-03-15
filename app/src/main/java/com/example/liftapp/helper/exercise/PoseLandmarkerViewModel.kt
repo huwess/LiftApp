@@ -1,4 +1,4 @@
-package com.example.liftapp.bottom_nav.fab_add
+package com.example.liftapp.helper.exercise
 
 import androidx.lifecycle.ViewModel
 
@@ -8,10 +8,10 @@ class PoseLandmarkerViewModel : ViewModel() {
     private var _delegate: Int = PoseLandmarkerHelper.DELEGATE_CPU
     private var _minPoseDetectionConfidence: Float =
         PoseLandmarkerHelper.DEFAULT_POSE_DETECTION_CONFIDENCE
-    private var _minPoseTrackingConfidence: Float = PoseLandmarkerHelper
-        .DEFAULT_POSE_TRACKING_CONFIDENCE
-    private var _minPosePresenceConfidence: Float = PoseLandmarkerHelper
-        .DEFAULT_POSE_PRESENCE_CONFIDENCE
+    private var _minPoseTrackingConfidence: Float =
+        PoseLandmarkerHelper.DEFAULT_POSE_TRACKING_CONFIDENCE
+    private var _minPosePresenceConfidence: Float =
+        PoseLandmarkerHelper.DEFAULT_POSE_PRESENCE_CONFIDENCE
 
     val currentDelegate: Int get() = _delegate
     val currentModel: Int get() = _model

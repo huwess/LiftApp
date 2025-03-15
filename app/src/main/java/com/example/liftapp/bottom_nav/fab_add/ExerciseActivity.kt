@@ -24,6 +24,8 @@ import androidx.core.content.ContextCompat
 import com.example.liftapp.R
 import com.example.liftapp.helper.audio.TextToSpeechHelper
 import com.example.liftapp.helper.calculator.Calculator
+import com.example.liftapp.helper.exercise.PoseLandmarkerHelper
+import com.example.liftapp.helper.exercise.PoseLandmarkerViewModel
 import com.example.liftapp.helper.record.StrengthRecordHelper
 import com.example.liftapp.helper.users.UserProfileHelper
 import com.google.firebase.auth.FirebaseAuth
@@ -57,18 +59,20 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
     private var isPoseDetectionActive = false
 
     private lateinit var repCountTextView: TextView
-    private lateinit var stageTextView: TextView
-    private lateinit var signTextView: TextView
+
     private var weight: Double = 0.0
     private var unitUsed: Int = 0
-    private var timer: CountDownTimer? = null
     private var exerciseStartTime: Long = 0L
     private var exerciseTimer: Timer? = null
     private var lastSpeechTime = 0L
     private val SPEECH_COOLDOWN = 3000 // 3 seconds between announcements
-    private var currentSign = ""
+    private var currentFeedback = ""
     private var isSpeechPending = false
     private val handler = Handler(Looper.getMainLooper())
+    private var validDistanceReached = false
+    private var countdownStarted = false
+    var exerciseStarted = false // Make this accessible to OverlayView if needed
+
 
 
 
@@ -128,8 +132,6 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
         firebaseAuth = FirebaseAuth.getInstance()
 
         repCountTextView = binding.cameraContainer.findViewById(R.id.repition_count)
-        stageTextView = binding.cameraContainer.findViewById(R.id.stage)
-        signTextView = binding.cameraContainer.findViewById(R.id.sign)
 
 
         // Retrieve the passed weight value
@@ -139,14 +141,31 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
 
         val overlayView: OverlayView = binding.cameraContainer.findViewById(R.id.overlay)
         overlayView.overlayUpdateListener = this
+        overlayView.setExerciseType("DumbbellPress")
 
         backgroundExecutor = Executors.newSingleThreadExecutor()
+
+        ensureExecutorActive()
+        // Initialize PoseLandmarkerHelper only after countdown
+        backgroundExecutor.execute {
+            poseLandmarkerHelper = PoseLandmarkerHelper(
+                context = this@ExerciseActivity,
+                runningMode = RunningMode.LIVE_STREAM,
+                minPoseDetectionConfidence = PoseLandmarkerHelper.DEFAULT_POSE_DETECTION_CONFIDENCE,
+                minPoseTrackingConfidence = PoseLandmarkerHelper.DEFAULT_POSE_TRACKING_CONFIDENCE,
+                minPosePresenceConfidence = PoseLandmarkerHelper.DEFAULT_POSE_PRESENCE_CONFIDENCE,
+                currentDelegate = PoseLandmarkerHelper.DELEGATE_CPU,
+                poseLandmarkerHelperListener = this@ExerciseActivity
+            )
+        }
+
         binding.viewFinder.post {
             setUpCamera()
         }
         Handler(Looper.getMainLooper()).postDelayed({
-            ttsHelper.speakText("Starting in thirty seconds")
-            startCountdownTimer()
+            ttsHelper.speakText("Please stand within the camera’s view, making sure your whole body is visible on the screen for a better result. Adjust your position if needed before we begin.")
+
+//            startCountdownTimer()
         }, 1000)
 
 
@@ -187,29 +206,58 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
     }
 
     override fun onStageUpdated(stage: String) {
-        stageTextView.text = stage
+        binding.stage.text = stage
+
     }
 
-    override fun onSignUpdated(sign: String) {
-        if (sign != currentSign && sign != "Proper") {
-            currentSign = sign
+    override fun onDistanceUpdated(distance: String) {
+        runOnUiThread {
+            binding.distance.text = "$distance"
+
+            val distanceValue = distance.toFloatOrNull()
+            // Define your acceptable distance range (in centimeters)
+            val MIN_DISTANCE = 70f
+            val MAX_DISTANCE = 120f
+
+            if (distanceValue != null) {
+                if (distanceValue in MIN_DISTANCE..MAX_DISTANCE) {
+                    if (!countdownStarted && !exerciseStarted) {
+                        binding.distance.visibility = View.GONE
+                        countdownStarted = true
+                        ttsHelper.speakText("Distance is valid. Starting countdown.")
+                        startCountdownTimer()
+                    }
+                } else {
+                    // When the distance is not valid, notify the user.
+//                    if (!exerciseStarted) {
+//                        ttsHelper.speakText("Distance out of range. Please adjust your position.")
+//                    }
+                    countdownStarted = false
+                }
+            }
+        }
+    }
+
+    override fun onFeedbackUpdated(feedback: String) {
+        if (feedback != currentFeedback && feedback != "Proper") {
+            currentFeedback = feedback
             handler.removeCallbacksAndMessages(null)
             isSpeechPending = false
 
             val timeSinceLastSpeech = System.currentTimeMillis() - lastSpeechTime
 
             if (timeSinceLastSpeech > SPEECH_COOLDOWN) {
-                triggerSpeech(sign)
+                triggerSpeech(feedback)
             } else {
                 isSpeechPending = true
                 handler.postDelayed({
                     if (isSpeechPending) {
-                        triggerSpeech(sign)
+                        triggerSpeech(feedback)
                     }
                 }, SPEECH_COOLDOWN - timeSinceLastSpeech)
             }
         }
-        signTextView.text = sign
+        binding.feedback.text = feedback
     }
     private fun triggerSpeech(sign: String) {
 //        ttsHelper.stopSpeaking() // Takes advantage of existing stopSpeaking()
@@ -269,31 +317,14 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
 
 
     private fun detectPose(imageProxy: ImageProxy) {
-        if (isPoseDetectionActive && this::poseLandmarkerHelper.isInitialized) {
-            poseLandmarkerHelper.detectLiveStream(
-                imageProxy = imageProxy,
-                isFrontCamera = cameraFacing == CameraSelector.LENS_FACING_FRONT
-            )
+        if (this::poseLandmarkerHelper.isInitialized) {
+            // Always run detection so we get distance info
+            poseLandmarkerHelper.detectLiveStream(imageProxy, cameraFacing == CameraSelector.LENS_FACING_FRONT)
         } else {
-            imageProxy.close() // Release the image if detection is not active
+            imageProxy.close()
         }
     }
 
-    private fun getLandmarkCoordinates(
-        resultBundle: PoseLandmarkerHelper.ResultBundle,
-        indices: List<Int>
-    ): Map<String, Pair<Float, Float>> {
-        val poseLandmarks = resultBundle.results.firstOrNull()?.landmarks()?.firstOrNull() ?: return emptyMap()
-        val coordinates = mutableMapOf<String, Pair<Float, Float>>()
-
-        indices.forEach { index ->
-            if (index in poseLandmarks.indices) {
-                val landmark = poseLandmarks[index]
-                coordinates["Landmark $index"] = Pair(landmark.x(), landmark.y())
-            }
-        }
-        return coordinates
-    }
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         imageAnalyzer?.targetRotation =
@@ -333,17 +364,17 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
 
     private fun startCountdownTimer() {
         binding.countdownTimer.visibility = View.VISIBLE
+        ttsHelper.speakText("Please stand in view so your whole body is visible. Adjust your position if needed.")
 
-        ttsHelper.speakText("Please stand within the camera’s view, making sure your whole body is visible on the screen for a better result. Adjust your position if needed before we begin.")
-        val timer = object : CountDownTimer(30000, 1000) {
+        object : CountDownTimer(30000, 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 val secondsRemaining = millisUntilFinished / 1000
                 binding.countdownTimer.text = "$secondsRemaining s"
 
-                if(secondsRemaining == 11L) {
+                if (secondsRemaining == 11L) {
                     ttsHelper.speakText("Ready in ten seconds")
                 }
-                if(secondsRemaining == 2L) {
+                if (secondsRemaining == 2L) {
                     ttsHelper.speakText("Ready in three! two! one! Go!")
                 }
             }
@@ -352,23 +383,10 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
                 binding.countdownTimer.visibility = View.GONE
                 binding.finishButton.visibility = View.VISIBLE
                 binding.timerLayout.visibility = View.VISIBLE
-                isPoseDetectionActive = true
+                binding.indicators.visibility = View.VISIBLE
 
-
-                ensureExecutorActive()
-                // Initialize PoseLandmarkerHelper only after countdown
-                backgroundExecutor.execute {
-                    poseLandmarkerHelper = PoseLandmarkerHelper(
-                        context = this@ExerciseActivity,
-                        runningMode = RunningMode.LIVE_STREAM,
-                        minPoseDetectionConfidence = PoseLandmarkerHelper.DEFAULT_POSE_DETECTION_CONFIDENCE,
-                        minPoseTrackingConfidence = PoseLandmarkerHelper.DEFAULT_POSE_TRACKING_CONFIDENCE,
-                        minPosePresenceConfidence = PoseLandmarkerHelper.DEFAULT_POSE_PRESENCE_CONFIDENCE,
-                        currentDelegate = PoseLandmarkerHelper.DELEGATE_CPU,
-                        poseLandmarkerHelperListener = this@ExerciseActivity
-                    )
-                }
-
+                // Now enable full pose detection (reps, stage, etc.)
+                exerciseStarted = true
                 startExerciseTimer()
             }
         }.start()
@@ -415,6 +433,7 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
         exerciseStartTime = System.currentTimeMillis()
         exerciseTimer = Timer()
         exerciseTimer?.schedule(object : TimerTask() {
+            @SuppressLint("DefaultLocale")
             override fun run() {
                 runOnUiThread {
                     val elapsedMillis = System.currentTimeMillis() - exerciseStartTime

@@ -11,6 +11,7 @@
     <color name="tertiary">#45882b</color>
     <color name="calm">#64ea4c</color>
     <color name="dark_gray">#141414</color>
+    <color name="dark_gray_50">#70141414</color>
     <color name="silver">#E5E4E2</color>
     <color name="light_shade">#e0e0e0</color>
 

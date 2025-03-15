@@ -1,5 +1,6 @@
 package com.example.liftapp.bottom_nav.fab_add
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
@@ -9,6 +10,9 @@ import android.util.AttributeSet
 import android.view.View
 import androidx.core.content.ContextCompat
 import com.example.liftapp.R
+import com.example.liftapp.helper.exercise.DumbbellPressEvaluator
+import com.example.liftapp.helper.exercise.ExerciseEvaluator
+import com.example.liftapp.helper.exercise.ProgressIndicator
 import com.google.mediapipe.tasks.vision.core.RunningMode
 import com.google.mediapipe.tasks.vision.poselandmarker.PoseLandmarker
 import com.google.mediapipe.tasks.vision.poselandmarker.PoseLandmarkerResult
@@ -22,7 +26,9 @@ import kotlin.math.min
 interface OverlayUpdateListener {
     fun onRepsUpdated(reps: Int)
     fun onStageUpdated(stage: String)
-    fun onSignUpdated(sign: String)
+    fun onFeedbackUpdated(feedback: String)
+    fun onDistanceUpdated(distance: String)
+//    fun onSpeed(speed: String)
 }
 
 class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
@@ -37,10 +43,22 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
     private var imageHeight: Int = 1
 
     private var reps = 0
-    private var stage = "down"
+    private var stage = "Start"
     private var sign = ""
     private var quad = 0
     var overlayUpdateListener: OverlayUpdateListener? = null
+
+
+
+    private var lastStageChangeTime: Long = 0L
+    private val FAST_THRESHOLD_MS = 900L  // Adjust as needed
+
+
+    // Track previous stage to reset progress indicators when stage changes.
+    private var lastStage: String = stage
+
+    // Set this from your Activity or Fragment when an exercise is selected.
+    var exerciseEvaluator: ExerciseEvaluator? = null
 
     init {
         initPaints()
@@ -49,20 +67,12 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
     fun clear() {
         results = null
         pointPaint.reset()
-//        linePaint.reset()
         textPaint.reset()
         invalidate()
         initPaints()
     }
 
     private fun initPaints() {
-//        linePaint.color = ContextCompat.getColor(context!!, R.color.mp_color_primary)
-//        linePaint.strokeWidth = 12f
-//        linePaint.style = Paint.Style.STROKE
-
-//        pointPaint.color = Color.RED
-//        pointPaint.strokeWidth = 60f
-//        pointPaint.style = Paint.Style.FILL
 
         textPaint.color = Color.WHITE
         textPaint.textSize = 40f
@@ -70,269 +80,57 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
         textPaint.textAlign = Paint.Align.CENTER
     }
 
+    // Call this method to specify which exercise to detect.
+    fun setExerciseType(exercise: String) {
+        exerciseEvaluator = when (exercise) {
+            "DumbbellPress" -> DumbbellPressEvaluator()
+            // Add more cases for additional exercises.
+            else -> null
+        }
+    }
+
     override fun draw(canvas: Canvas) {
         super.draw(canvas)
         results?.let { poseLandmarkerResult ->
-            for (landmark in poseLandmarkerResult.landmarks()) {
-                val points = landmark.map {
-                    Pair(
-                        it.x() * imageWidth * scaleFactor,
-                        it.y() * imageHeight * scaleFactor
-                    )
-                }
-
-                // Draw landmarks and connections
-//                PoseLandmarker.POSE_LANDMARKS.forEach {
-//                    canvas.drawLine(
-//                        points[it.start()].first,
-//                        points[it.start()].second,
-//                        points[it.end()].first,
-//                        points[it.end()].second,
-//                        linePaint
-//                    )
-//                }
-
-                // This is for the Circle and Landmark Specifications
-                val importantLandmarkIndices = setOf(11, 12, 13, 14, 15, 16)
-
-                val indicators = mutableListOf<ProgressIndicator>()
-                val angles = calculatePoseAngles(points)
-                val leftShoulderAngle = angles["LHipLShoulderLElbow"] ?: 0f
-                val rightShoulderAngle = angles["RHipRShoulderRElbow"] ?: 0f
-                val leftElbowAngle = angles["LShoulderLElbowLWrist"] ?: 0f
-                val rightElbowAngle = angles["RShoulderRElbowRWrist"] ?: 0f
-                val leftShoulderShoulderAngle = angles["LElbowLShoulderRShoulder"] ?: 0f
-                val rightShoulderShoulderAngle = angles["RElbowRShoulderLShoulder"] ?: 0f
-                for (normalizedLandmark in landmark.withIndex()) {
-                    val index = normalizedLandmark.index
-                    if (index in importantLandmarkIndices) {
-                        val x = normalizedLandmark.value.x() * imageWidth * scaleFactor
-                        val y = normalizedLandmark.value.y() * imageHeight * scaleFactor
-
-                        val z = normalizedLandmark.value.z() * imageWidth * scaleFactor
-
-                        // Default progress values
-                        var progress = 0f
-                        var color = Color.RED // Default to red
-
-                        if (stage == "down") {
-                            progress = 0f
-
-                            color = if (sign == "Proper") Color.YELLOW else Color.RED
-                        } else if (stage == "up") {
-                            progress = 100f
-                            color = if (sign == "Proper") Color.GREEN else Color.RED
-                        }
-
-                        // Adjust progress based on angles
-                        when (index) {
-                            11 -> { // Shoulders
-                                progress = (rightShoulderAngle / 180f) * 100f
-
-                            }
-                            12 -> { // Shoulders
-                                progress = (leftShoulderAngle / 180f) * 100f
-                            }
-                            13 -> { // Elbows
-                                progress = (rightShoulderAngle / 175f) * 100f
-
-//                                if(quad == 0) {
-//                                    progress -= 50f
-//                                }
-                            }
-                            14 -> { // Elbows
-                                progress = (leftShoulderAngle / 175f) * 100f
-//                                if(quad == 0) {
-//                                    progress -= 50f
-//                                }
-                            }
-                            15 -> { // Wrists
-                                progress = ((rightShoulderAngle + rightElbowAngle) / 360f) * 100f
-                            }
-                            16 -> { // Wrists
-                                progress = ((leftShoulderAngle + leftElbowAngle) / 360f) * 100f
-                            }
-
-                        }
-
-                        indicators.add(ProgressIndicator(
-                            x = x,
-                            y = y,
-                            progress = progress.coerceIn(0f, 100f),
-                            mainColor = color,
-                            bgColor = Color.LTGRAY
-                        ))
-                    }
-                }
-                indicators.forEach { it.draw(canvas) }
-
-                // Calculate and draw angles
-
-
-
-                //Visualize Angles
-                leftShoulderAngle.let {
-                    val point = poseLandmarkerResult.landmarks().get(0).get(12) // Example: Left Shoulder (point 12)
-                    val x = point.x() * imageWidth * scaleFactor
-                    val y = point.y() * imageHeight * scaleFactor + 20 // Adjust Y position by -10
-//                    canvas.drawText("Left Shoulder: ${it.toInt()}°", x, y, textPaint)
-                }
-
-                rightShoulderAngle.let {
-                    val point = poseLandmarkerResult.landmarks().get(0).get(11) // Example: Right Shoulder (point 11)
-                    val x = point.x() * imageWidth * scaleFactor
-                    val y = point.y() * imageHeight * scaleFactor + 20 // Adjust Y position by -10
-//                    canvas.drawText("Right Shoulder: ${it.toInt()}°", x, y, textPaint)
-                }
-
-                leftElbowAngle.let {
-                    val point = poseLandmarkerResult.landmarks().get(0).get(14) // Example: Left Elbow (point 14)
-                    val x = point.x() * imageWidth * scaleFactor
-                    val y = point.y() * imageHeight * scaleFactor - 10 // Adjust Y position by -10
-//                    canvas.drawText("Left Elbow: ${it.toInt()}°", x, y, textPaint)
-                }
-
-                rightElbowAngle.let {
-                    val point = poseLandmarkerResult.landmarks().get(0).get(13) // Example: Right Elbow (point 13)
-                    val x = point.x() * imageWidth * scaleFactor
-                    val y = point.y() * imageHeight * scaleFactor - 10 // Adjust Y position by -10
-//                    canvas.drawText("Right Elbow: ${it.toInt()}°", x, y, textPaint)
-                }
-
-                rightShoulderShoulderAngle.let {
-                    val point = poseLandmarkerResult.landmarks().get(0).get(11) // Example: Right Shoulder (point 11)
-                    val x = point.x() * imageWidth * scaleFactor
-                    val y = point.y() * imageHeight * scaleFactor - 10 // Adjust Y position by +10
-//                    canvas.drawText("URight Shoulder: ${it.toInt()}°", x, y, textPaint)
-                }
-
-                leftElbowAngle.let {
-                    val point = poseLandmarkerResult.landmarks().get(0).get(12) // Example: Left Shoulder (point 12)
-                    val x = point.x() * imageWidth * scaleFactor
-                    val y = point.y() * imageHeight * scaleFactor - 10 // Adjust Y position by +10
-//                    canvas.drawText("ULeft Shoulder: ${it.toInt()}°", x, y, textPaint)
-                }
-
-                if (leftShoulderAngle != null) {
-                    if (rightShoulderAngle != null) {
-                        if(leftShoulderAngle < 90f &&  rightShoulderAngle < 90){
-                            quad = 0
-                        } else {
-                            quad = 1
-                        }
-                        if(leftShoulderAngle < 70 && rightShoulderAngle < 70) {
-                            stage = "down"
-
-                            //wrist, elbow and shoulder progress is zero or low during this part
-
-                            overlayUpdateListener?.onStageUpdated(stage)
-                        }
-
-                        if((leftShoulderAngle > 160 && rightShoulderAngle > 160) && (stage == "down")) {
-                            stage = "up"
-
-                            //wrist, elbow and shoulder progress is complete or 100%
-
-                            reps += 1
-                            overlayUpdateListener?.onStageUpdated(stage)
-                            overlayUpdateListener?.onRepsUpdated(reps)
-                        }
-                        if(quad == 1) {
-                            if(leftShoulderAngle > 160 && rightShoulderAngle > 160) {
-                                if (leftElbowAngle != null) {
-                                    if (rightElbowAngle != null) {
-                                        if(leftElbowAngle <= 175 && rightElbowAngle <= 175) {
-                                            sign = "Proper"
-
-                                            //wrist, elbow and shoulder progress is complete or 100%
-
-                                        } else {
-                                            sign = "Too High"
-
-                                            //wrist, elbow and shoulder progress is red but full in this part because it is too high
-                                        }
-                                        overlayUpdateListener?.onSignUpdated(sign)
-                                    }
-                                }
-
-                            } else if (leftShoulderShoulderAngle != null) {
-                                if (rightShoulderShoulderAngle != null) {
-                                    if((leftShoulderShoulderAngle > 90 && leftShoulderShoulderAngle <=160) &&
-                                        (rightShoulderShoulderAngle > 90 && rightShoulderShoulderAngle <=160) ) {
-                                        if (leftElbowAngle != null) {
-                                            if (rightElbowAngle != null) {
-                                                if(leftElbowAngle <= 150 && rightElbowAngle <= 150 ) {
-                                                    sign = "Proper"
-
-                                                    //wrist, elbow and shoulder progress is complete or 100%
-
-                                                } else {
-                                                    sign = "Too Wide"
-
-                                                    //wrist, elbow and shoulder progress is red and decreases because too  wide
-                                                }
-
-                                                overlayUpdateListener?.onSignUpdated(sign)
-                                            }
-                                        }
-                                    } else {
-                                        sign = ""
-                                        overlayUpdateListener?.onSignUpdated(sign)
-                                    }
-                                }
-                            }
-
-                        } else {
-                            if((leftShoulderAngle < 70) && (rightShoulderAngle < 70)) {
-                                if (leftShoulderAngle < 30 && rightShoulderAngle < 30) {
-                                    sign = "Arms Too Low"
-
-                                    //wrist, elbow and shoulder progress is
-
-                                } else {
-                                    sign = "Proper"
-
-                                    pointPaint.color = Color.YELLOW
-                                    pointPaint.strokeWidth = 60f
-                                    pointPaint.style = Paint.Style.FILL
-                                }
-                            } else {
-                                sign = ""
-                            }
-                            overlayUpdateListener?.onSignUpdated(sign)
-                        }
-                    }
-                }
-//                // Track and update reps/stage/sign
-//                leftElbowAngle?.let { updateRepsAndStage(it) }
-//                leftElbowAngle?.let { updateSign(it) }
+            val landmarksList = poseLandmarkerResult.landmarks()
+            if (landmarksList.isEmpty()) return
+            val landmarkSet = landmarksList[0]
+            val points = landmarkSet.map {
+                Pair(
+                    it.x() * imageWidth * scaleFactor,
+                    it.y() * imageHeight * scaleFactor
+                )
             }
+
+            // Only update rep/stage/feedback if exercise has started.
+            // Assuming the context is ExerciseActivity and exerciseStarted is public.
+            if ((context as? ExerciseActivity)?.exerciseStarted == true) {
+                exerciseEvaluator?.let { evaluator ->
+                    val evaluation = evaluator.evaluatePose(points)
+                    overlayUpdateListener?.onRepsUpdated(evaluation.reps)
+                    overlayUpdateListener?.onStageUpdated(evaluation.stage)
+                    overlayUpdateListener?.onFeedbackUpdated(evaluation.feedback)
+
+                    evaluation.progressIndicators?.forEach { indicator ->
+                        val progressIndicator = ProgressIndicator(
+                            x = indicator.x,
+                            y = indicator.y,
+                            progress = indicator.progress,
+                            mainColor = indicator.mainColor,
+                            bgColor = indicator.bgColor
+                        )
+                        progressIndicator.draw(canvas)
+                    }
+                }
+            }
+
+//
         }
+        // Update lastStage so that indicators are only reset once on stage change.
+//        lastStage = stage
     }
 
-    private fun updateRepsAndStage(elbowAngle: Float) {
-        val upThreshold = 45f
-        val downThreshold = 160f
 
-        if (elbowAngle <= upThreshold && stage == "down") {
-            stage = "up"
-            overlayUpdateListener?.onStageUpdated(stage)
-        } else if (elbowAngle >= downThreshold && stage == "up") {
-            stage = "down"
-            reps++
-            overlayUpdateListener?.onRepsUpdated(reps)
-            overlayUpdateListener?.onStageUpdated(stage)
-        }
-    }
-
-    private fun updateSign(elbowAngle: Float) {
-        val sign = if (elbowAngle in 80f..100f) {
-            "Good form!"
-        } else {
-            "Adjust your posture!"
-        }
-        overlayUpdateListener?.onSignUpdated(sign)
-    }
 
     private fun calculatePoseAngles(points: List<Pair<Float, Float>>): Map<String, Float> {
         return mapOf(
@@ -368,6 +166,34 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
         return angle
     }
 
+    private fun calculateDistance(pointA: Pair<Float, Float>, pointB: Pair<Float, Float>): Float {
+        val deltaX = pointB.first - pointA.first
+        val deltaY = pointB.second - pointA.second
+        return Math.sqrt((deltaX * deltaX + deltaY * deltaY).toDouble()).toFloat()
+    }
+
+    private fun calculateDistanceToCamera(leftShoulder: Pair<Float, Float>, rightShoulder: Pair<Float, Float>): Float {
+        // Real-world average shoulder width in cm (adjustable)
+        val actualWidth = 40f
+
+        // Approximate focal length of phone camera in pixels (you can calibrate this)
+        val focalLength = 600f
+
+        // Calculate the pixel distance between the shoulders
+        val pixelWidth = calculateDistance(leftShoulder, rightShoulder)
+
+        // Avoid division by zero
+        if (pixelWidth == 0f) return -1f
+
+        // Calculate the distance to the camera
+        val distance = (actualWidth * focalLength) / pixelWidth
+
+        return distance
+    }
+
+
+
+    @SuppressLint("DefaultLocale")
     fun setResults(
         poseLandmarkerResults: PoseLandmarkerResult,
         imageHeight: Int,
@@ -378,6 +204,27 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
         this.imageHeight = imageHeight
         this.imageWidth = imageWidth
 
+        // Extract landmarks
+        val landmarksList = poseLandmarkerResults.landmarks()
+        if (landmarksList.isEmpty()) return
+        val landmarkSet = landmarksList[0]
+
+        // Get shoulder positions
+        val leftShoulder = Pair(landmarkSet[12].x() * imageWidth, landmarkSet[12].y() * imageHeight)
+        val rightShoulder = Pair(landmarkSet[11].x() * imageWidth, landmarkSet[11].y() * imageHeight)
+
+        // Calculate distance
+        val distanceToCamera = calculateDistanceToCamera(leftShoulder, rightShoulder)
+
+        // Define acceptable range (adjust values as needed)
+        val MIN_DISTANCE_CM = 80f
+        val MAX_DISTANCE_CM = 120f
+
+        if (distanceToCamera !in MIN_DISTANCE_CM..MAX_DISTANCE_CM) {
+            overlayUpdateListener?.onDistanceUpdated(String.format("%.1f", distanceToCamera))
+            return // Skip further pose processing
+        }
+
         scaleFactor = when (runningMode) {
             RunningMode.IMAGE, RunningMode.VIDEO -> min(width * 1f / imageWidth, height * 1f / imageHeight)
             RunningMode.LIVE_STREAM -> max(width * 1f / imageWidth, height * 1f / imageHeight)
@@ -385,36 +232,5 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
         invalidate()
     }
 
-    private inner class ProgressIndicator(
-        var x: Float = 0f,
-        var y: Float = 0f,
-        var progress: Float = 0f,
-        var mainColor: Int = Color.BLUE,
-        var bgColor: Int = Color.LTGRAY
-    ) {
-        private val strokeWidth = 12f
-        private val radius = 32f
 
-        fun draw(canvas: Canvas) {
-            // Draw background circle
-            val bgPaint = Paint().apply {
-                color = bgColor
-                style = Paint.Style.STROKE
-                strokeWidth = this@ProgressIndicator.strokeWidth
-                isAntiAlias = true
-            }
-            canvas.drawCircle(x, y, radius, bgPaint)
-
-            // Draw progress arc
-            val progressPaint = Paint().apply {
-                color = mainColor
-                style = Paint.Style.STROKE
-                strokeWidth = this@ProgressIndicator.strokeWidth
-                strokeCap = Paint.Cap.ROUND
-                isAntiAlias = true
-            }
-            val rect = RectF(x - radius, y - radius, x + radius, y + radius)
-            canvas.drawArc(rect, -90f, 360 * (progress / 100f), false, progressPaint)
-        }
-    }
 }

@@ -1,4 +1,4 @@
-package com.example.liftapp.bottom_nav.fab_add
+package com.example.liftapp.helper.exercise
 
 import android.content.Context
 import android.graphics.Bitmap

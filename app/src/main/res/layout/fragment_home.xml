@@ -11,7 +11,8 @@
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fillViewport="true">
+        android:fillViewport="true"
+        tools:ignore="UselessParent">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
@@ -30,11 +31,12 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                android:elevation="10dp">
+                android:elevation="48dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:baselineAligned="false"
                     android:gravity="center"
                     android:orientation="horizontal"
                     app:layout_constraintEnd_toEndOf="parent"
@@ -44,8 +46,8 @@
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginLeft="30dp"
-                        android:layout_marginRight="10dp"
+                        android:layout_marginStart="30dp"
+                        android:layout_marginEnd="10dp"
                         android:layout_marginVertical="20dp"
                         android:gravity="center"
                         android:orientation="vertical"
@@ -113,8 +115,8 @@
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginRight="30dp"
-                        android:layout_marginLeft="10dp"
+                        android:layout_marginEnd="30dp"
+                        android:layout_marginStart="10dp"
                         android:layout_marginVertical="20dp"
                         android:gravity="center"
                         android:orientation="vertical"
@@ -168,7 +170,7 @@
                 app:layout_constraintTop_toBottomOf="@+id/header"
                 app:layout_constraintBottom_toTopOf="@+id/constraintLayout3"
                 app:layout_constraintEnd_toEndOf="parent"
-                android:layout_marginEnd="15dp"
+                android:layout_marginEnd="16dp"
                 android:textColor="@color/primary"
                 android:clickable="true"
                 android:focusable="true"/>
@@ -264,6 +266,7 @@
                 </LinearLayout>
                 <!-- Modified RecyclerView -->
                 <androidx.recyclerview.widget.RecyclerView
+                    android:contentDescription="Days of the week"
                     android:id="@+id/calendarRecyclerView"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -430,7 +433,8 @@
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
                             android:text="Percentage"
-                            android:textColor="@color/gray"/>
+                            android:textColor="@color/gray"
+                            tools:ignore="NestedWeights" />
                         <TextView
                             android:layout_width="0dp"
                             android:layout_weight="1"
@@ -443,7 +447,7 @@
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
                             android:text="Repititions"
-                            android:gravity="right"
+                            android:gravity="end"
                             android:textColor="@color/gray"/>
                     </LinearLayout>
                     <com.google.android.material.divider.MaterialDivider
@@ -466,7 +470,8 @@
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
                             android:text="90%"
-                            android:textColor="@color/gray"/>
+                            android:textColor="@color/gray"
+                            tools:ignore="NestedWeights" />
                         <TextView
                             android:id="@+id/weight_90"
                             android:layout_width="0dp"
@@ -481,7 +486,7 @@
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
                             android:text="0"
-                            android:gravity="right"
+                            android:gravity="end"
                             android:textColor="@color/gray"/>
                     </LinearLayout>
                     <com.google.android.material.divider.MaterialDivider
@@ -518,7 +523,7 @@
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
                             android:text="0"
-                            android:gravity="right"
+                            android:gravity="end"
                             android:textColor="@color/gray"/>
                     </LinearLayout>
                     <com.google.android.material.divider.MaterialDivider
