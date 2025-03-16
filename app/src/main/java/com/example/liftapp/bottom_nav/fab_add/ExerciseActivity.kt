@@ -405,7 +405,7 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
                     val reps_final = repCountTextView.text.toString().toInt()
                     val oneRepMax = calculator.oneRepMaxCalculator(weight, reps_final)
 
-                    val strengthLevel = calculator.assStrengthLvl(userAge, userWeight, oneRepMax, userGender, unit, unitUsed)
+                    val strengthLevel = calculator.assStrengthLvl(userAge, userWeight, oneRepMax, userGender, unit, unitUsed, 0 )
                     strengthRecordHelper.saveStrengthRecord(
                         reps_final,
                         weight,

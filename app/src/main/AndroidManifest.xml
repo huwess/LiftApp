@@ -22,10 +22,6 @@
             android:name=".bottom_nav.fab_add.ExerciseActivity"
             android:exported="false" />
         <activity
-            android:name=".PoseLandmarkerActivity"
-            android:exported="false"
-            android:theme="@style/Theme.LiftApp" />
-        <activity
             android:name=".bottom_nav.settings_menu.EditProfileActivity"
             android:exported="false" />
         <activity

@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.GridLayoutManager
+import com.example.liftapp.MainActivity
 import com.example.liftapp.R
 import com.example.liftapp.calendar.CalendarFragment
 import com.example.liftapp.calendar.CurrentWeekData
@@ -50,6 +51,7 @@ class HomeFragment : Fragment() {
     private lateinit var lineChart: LineChart
     private lateinit var xValues: List<String>
     private val userViewModel: UserViewModel by activityViewModels()
+    private var isDataLoaded = false
 
 
     override fun onCreateView(
@@ -72,6 +74,7 @@ class HomeFragment : Fragment() {
         super.onResume()
         fetchData()
     }
+
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -187,11 +190,23 @@ class HomeFragment : Fragment() {
                     fragmentHomeBinding.rep50.text = calculator.calculateRepetitions(highestOneRepMax, w50, highestRepsInSingleRecord).toString()
                 }
 
+                // Once data is loaded, signal MainActivity if not already done
+                if (!isDataLoaded) {
+                    isDataLoaded = true
+                    (activity as? MainActivity)?.onHomeDataLoaded()
+                }
+
             },
             onFailure = { e ->
                 Log.e("RecordsSummary", "Error fetching records: ${e.message}")
                 fragmentHomeBinding.liftCount.text = "null"
                 fragmentHomeBinding.totalMinutes.text = "null"
+
+                // Even if there’s an error, signal to remove the splash screen
+                if (!isDataLoaded) {
+                    isDataLoaded = true
+                    (activity as? MainActivity)?.onHomeDataLoaded()
+                }
             }
         )
     }
