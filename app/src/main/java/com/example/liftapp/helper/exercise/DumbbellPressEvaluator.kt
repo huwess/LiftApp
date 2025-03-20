@@ -110,7 +110,7 @@ class DumbbellPressEvaluator : ExerciseEvaluator {
             if((leftShoulderAngle < 70) && (rightShoulderAngle < 70)) {
 
 
-                if(leftDistance > 220 || rightDistance > 220) {
+                if(leftDistance > 240 || rightDistance > 240) {
                     feedback = "Elbows too far out"
                 } else {
                     feedback = "Proper"

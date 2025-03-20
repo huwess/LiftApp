@@ -184,7 +184,7 @@
         android:fontFamily="@font/open_sans_semibold"
         android:gravity="center"
         android:text="15s"
-        android:textColor="@color/gray"
+        android:textColor="@color/white"
         android:textSize="64sp"
         android:visibility="gone" />
 
@@ -196,7 +196,7 @@
         android:fontFamily="@font/open_sans_semibold"
         android:gravity="center"
         android:text="0"
-        android:textColor="@color/gray"
+        android:textColor="@color/white"
         android:textSize="64sp"
         android:visibility="visible" />
 
