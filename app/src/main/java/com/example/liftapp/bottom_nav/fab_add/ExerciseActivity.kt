@@ -65,7 +65,7 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
     private var exerciseStartTime: Long = 0L
     private var exerciseTimer: Timer? = null
     private var lastSpeechTime = 0L
-    private val SPEECH_COOLDOWN = 3000 // 3 seconds between announcements
+    private val SPEECH_COOLDOWN = 1500 // 3 seconds between announcements
     private var currentFeedback = ""
     private var isSpeechPending = false
     private val handler = Handler(Looper.getMainLooper())
