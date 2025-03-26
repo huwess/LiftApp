@@ -219,8 +219,8 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
             val MIN_DISTANCE = 70f
             val MAX_DISTANCE = 120f
 
-            if (distanceValue != null) {
-                if (distanceValue in MIN_DISTANCE..MAX_DISTANCE) {
+            if (distanceValue != null && !validDistanceReached) {
+                if (distanceValue in MIN_DISTANCE..MAX_DISTANCE ) {
                     if (!countdownStarted && !exerciseStarted) {
                         binding.distance.visibility = View.GONE
                         countdownStarted = true
