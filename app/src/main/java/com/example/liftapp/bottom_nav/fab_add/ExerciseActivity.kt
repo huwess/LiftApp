@@ -367,7 +367,7 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
 
     private fun startCountdownTimer() {
         binding.countdownTimer.visibility = View.VISIBLE
-        ttsHelper.speakText("Please stand in view so your whole body is visible. Adjust your position if needed.")
+//        ttsHelper.speakText("Please stand in view so your whole body is visible. Adjust your position if needed.")
 
         object : CountDownTimer(30000, 1000) {
             override fun onTick(millisUntilFinished: Long) {
