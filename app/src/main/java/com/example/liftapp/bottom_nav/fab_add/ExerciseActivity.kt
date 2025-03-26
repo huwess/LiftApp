@@ -224,7 +224,10 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
                     if (!countdownStarted && !exerciseStarted) {
                         binding.distance.visibility = View.GONE
                         countdownStarted = true
-                        ttsHelper.speakText("Distance is valid. Starting countdown.")
+                        if(!validDistanceReached) {
+                            validDistanceReached = true
+                            ttsHelper.speakText("Distance is valid. Starting countdown.")
+                        }
                         startCountdownTimer()
                     }
                 } else {
@@ -371,7 +374,7 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
                 val secondsRemaining = millisUntilFinished / 1000
                 binding.countdownTimer.text = "$secondsRemaining s"
 
-                if (secondsRemaining == 11L) {
+                if (secondsRemaining == 10L) {
                     ttsHelper.speakText("Ready in ten seconds")
                 }
                 if (secondsRemaining == 2L) {
