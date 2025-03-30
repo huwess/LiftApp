@@ -224,7 +224,7 @@ class MainActivity : AppCompatActivity() {
 
         val imageView = mview.findViewById<ImageView>(R.id.gif_animation)
 
-        Glide.with(mview).asGif().load(R.drawable.dumbbellpress).into(imageView)
+        Glide.with(mview).asGif().load(R.drawable.shoulderpress).into(imageView)
 
         val inputContainer = mview.findViewById<LinearLayout>(R.id.input_container)
         nextButton.setBackgroundColor(getColor(R.color.gray))
