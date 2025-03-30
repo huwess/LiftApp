@@ -6,6 +6,8 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
+import android.hardware.camera2.CameraCharacteristics
+import android.hardware.camera2.CameraManager
 import android.util.AttributeSet
 import android.view.View
 import androidx.core.content.ContextCompat
@@ -21,6 +23,7 @@ import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.sqrt
 
 // Callback interface for updating the UI
 interface OverlayUpdateListener {
@@ -169,7 +172,7 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
     private fun calculateDistance(pointA: Pair<Float, Float>, pointB: Pair<Float, Float>): Float {
         val deltaX = pointB.first - pointA.first
         val deltaY = pointB.second - pointA.second
-        return Math.sqrt((deltaX * deltaX + deltaY * deltaY).toDouble()).toFloat()
+        return sqrt((deltaX * deltaX + deltaY * deltaY).toDouble()).toFloat()
     }
 
     private fun calculateDistanceToCamera(leftShoulder: Pair<Float, Float>, rightShoulder: Pair<Float, Float>): Float {
@@ -177,7 +180,7 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
         val actualWidth = 40f
 
         // Approximate focal length of phone camera in pixels (you can calibrate this)
-        val focalLength = 600f
+        val focalLength = getCameraFocalLength()
 
         // Calculate the pixel distance between the shoulders
         val pixelWidth = calculateDistance(leftShoulder, rightShoulder)
@@ -190,6 +193,26 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
 
         return distance
     }
+
+
+    private fun getCameraFocalLength(): Float {
+        val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+        try {
+            for (cameraId in cameraManager.cameraIdList) {
+                val characteristics = cameraManager.getCameraCharacteristics(cameraId)
+                val focalLengths = characteristics.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS)
+
+                if (focalLengths != null && focalLengths.isNotEmpty()) {
+                    return focalLengths[0] // Return the first available focal length
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return -1f // Return -1 if focal length cannot be determined
+    }
+
+
 
 
 
@@ -217,8 +240,8 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
         val distanceToCamera = calculateDistanceToCamera(leftShoulder, rightShoulder)
 
         // Define acceptable range (adjust values as needed)
-        val MIN_DISTANCE_CM = 80f
-        val MAX_DISTANCE_CM = 120f
+        val MIN_DISTANCE_CM = 0.8f
+        val MAX_DISTANCE_CM = 1.0f
 
         if (distanceToCamera !in MIN_DISTANCE_CM..MAX_DISTANCE_CM) {
             overlayUpdateListener?.onDistanceUpdated(String.format("%.1f", distanceToCamera))

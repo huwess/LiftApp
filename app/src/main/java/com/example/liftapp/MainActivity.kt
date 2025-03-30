@@ -35,11 +35,17 @@ import com.example.liftapp.bottom_nav.HomeFragment
 import com.example.liftapp.bottom_nav.SettingsFragment
 import com.example.liftapp.bottom_nav.fab_add.ExerciseActivity
 import com.example.liftapp.helper.audio.TextToSpeechHelper
+import com.example.liftapp.helper.record.FirebaseInitializer
 import com.google.firebase.auth.FirebaseAuth
 import com.example.liftapp.helper.users.UserProfileHelper
 import com.example.liftapp.helper.users.UserViewModel
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+import kotlin.math.log
 
 class MainActivity : AppCompatActivity() {
 
@@ -57,12 +63,13 @@ class MainActivity : AppCompatActivity() {
 
         val splashScreen = installSplashScreen()
         splashScreen.setKeepOnScreenCondition { !isHomeDataLoaded }
-
         super.onCreate(savedInstanceState)
-
+        TimeoutHandler.startTimeout(this)
+        checkInternetConnection()
         binding = ActivityMainBinding.inflate(layoutInflater)
         firebaseAuth = FirebaseAuth.getInstance()
         val currentUser = firebaseAuth.currentUser
+        Log.d("USERLOG", currentUser?.email.toString())
         userProfileHelper = UserProfileHelper()
         ttsHelper = TextToSpeechHelper(this)
         setContentView(binding.root)
@@ -288,5 +295,39 @@ class MainActivity : AppCompatActivity() {
         isHomeDataLoaded = true
     }
 
+    private fun checkInternetConnection() {
+        val connectedRef = FirebaseDatabase.getInstance().getReference(".info/connected")
+        connectedRef.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val isConnected = snapshot.getValue(Boolean::class.java) ?: false
+                if (!isConnected) {
+                    Toast.makeText(this@MainActivity, "You're offline. Data will sync when online.", Toast.LENGTH_LONG).show()
+                }
+            }
 
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("MainActivity", "Error checking connection: ${error.message}")
+            }
+        })
+
+
+
+    }
+
+
+
+}
+
+object TimeoutHandler {
+    fun startTimeout(activity: MainActivity) {
+        object : CountDownTimer(2000, 1000) {
+            override fun onTick(millisUntilFinished: Long) {}
+            override fun onFinish() {
+                if (!activity.isHomeDataLoaded) {
+                    activity.onHomeDataLoaded()
+                    Log.d("TimeoutHandler", "Timeout reached; dismissing splash screen.")
+                }
+            }
+        }.start()
+    }
 }

@@ -20,8 +20,13 @@ class DumbbellPressEvaluator : ExerciseEvaluator {
         if (points.size < 16) return ExerciseEvaluationResult(reps, stage, "Insufficient landmarks", warning, null)
 
 
-        val leftDistance = calculator.calculateDistance(points[14], points[12])
-        val rightDistance = calculator.calculateDistance(points[13], points[11])
+        val leftEMDistance = calculator.calculateDistance(points[14], points[10])
+        val rightEMDistance = calculator.calculateDistance(points[13], points[9])
+        val leftESDistance = calculator.calculateDistance(points[14], points[12])
+        val rightESDistance = calculator.calculateDistance(points[13], points[11])
+//        Log.d("LEFTDISTANCE", leftESDistance.toString())
+//        Log.d("RIGHTDISTANCE", rightESDistance.toString())
+
 
         val rightHip =  points[23]
         val leftHip = points[24]
@@ -94,7 +99,9 @@ class DumbbellPressEvaluator : ExerciseEvaluator {
                         //wrist, elbow and shoulder progress is complete or 100%
 
                     } else {
-                        feedback = "Too Wide"
+                        if(stage == "up") {
+                            feedback = "Too Wide"
+                        }
 
                         //wrist, elbow and shoulder progress is red and decreases because too  wide
                     }
@@ -110,8 +117,11 @@ class DumbbellPressEvaluator : ExerciseEvaluator {
             if((leftShoulderAngle < 70) && (rightShoulderAngle < 70)) {
 
 
-                if(leftDistance > 240 || rightDistance > 240) {
-                    feedback = "Elbows too far out"
+                if(stage == "down" && (leftEMDistance > 320 || rightEMDistance > 320)) {
+                    if(leftESDistance > 190 || rightESDistance > 190) {
+                        feedback = "Elbows too far out"
+                    }
+
                 } else {
                     feedback = "Proper"
                 }

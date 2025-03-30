@@ -2,21 +2,12 @@ package com.example.liftapp.helper.record
 
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ServerValue
-import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.*
 import java.text.SimpleDateFormat
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.time.temporal.WeekFields
-import java.util.Calendar
-import java.util.Date
-import java.util.Locale
+import java.util.*
 
 class StrengthRecordHelper {
+    // Get the instance with your Firebase URL
     private val database: FirebaseDatabase = FirebaseDatabase.getInstance(
         "https://lift-app-id-default-rtdb.asia-southeast1.firebasedatabase.app/"
     )
@@ -30,6 +21,9 @@ class StrengthRecordHelper {
         "Unknown" to 0
     )
 
+    /**
+     * Saves a strength record for the current user.
+     */
     fun saveStrengthRecord(
         repetitions: Int,
         dumbbellWeight: Double,
@@ -45,16 +39,16 @@ class StrengthRecordHelper {
             onFailure(Exception("User not authenticated"))
             return
         }
-
-        // Get current date and time
+        // Get current date and time in desired formats
         val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         val timeFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
         val date = dateFormat.format(Date())
         val time = timeFormat.format(Date())
 
-        // Generate a unique record ID
+        // Generate a unique key for this record
         val recordsRef = database.getReference("users/$userId/records")
-        val newRecordRef = recordsRef.push() // Generates a unique key
+        recordsRef.keepSynced(true) // Request that this node is always kept in sync (and cached)
+        val newRecordRef = recordsRef.push()
 
         val record = StrengthRecord(
             repetitions,
@@ -68,17 +62,28 @@ class StrengthRecordHelper {
         )
 
         newRecordRef.setValue(record)
-            .addOnSuccessListener { onSuccess() }
-            .addOnFailureListener { onFailure(it) }
+            .addOnSuccessListener {
+                Log.d("StrengthRecordHelper", "Record saved successfully")
+                onSuccess()
+            }
+            .addOnFailureListener {
+                Log.e("StrengthRecordHelper", "Failed to save record: ${it.message}")
+                onFailure(it)
+            }
     }
 
+    /**
+     * Fetches home data by aggregating records.
+     * Returns total repetitions, duration, best strength level, record count,
+     * best rep count, highest 1RM, and the weight unit.
+     */
     fun fetchHomeData(
         onSuccess: (
             totalRepetitions: Int,
             totalDuration: Long,
             highestStrengthLevel: String,
             numberOfRecords: Int,
-            bestRep: Int, // Reps performed with the highest 1-rep max
+            bestRep: Int,
             highestOneRepMax: Double,
             weightUnit: Int
         ) -> Unit,
@@ -90,45 +95,39 @@ class StrengthRecordHelper {
         }
 
         val recordsRef = database.getReference("users/$userId/records")
+        recordsRef.keepSynced(true)
 
-        recordsRef.get()
-            .addOnSuccessListener { snapshot ->
+        recordsRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                var totalRepetitions = 0
+                var totalDuration = 0L
+                var highestStrengthLevelValue = 0
+                var highestStrengthLevel = "Untrained"
+                var numberOfRecords = 0
+                var bestRep = 0
+                var highestOneRepMax = 0.0
+                var weightUnit = 0
+
                 if (snapshot.exists() && snapshot.childrenCount > 0) {
-                    var totalRepetitions = 0
-                    var totalDuration = 0L
-                    var highestStrengthLevelValue = 0
-                    var highestStrengthLevel = "Untrained"
-                    var numberOfRecords = 0
-                    var bestRep = 0
-                    var highestOneRepMax = 0.0
-                    var weightUnit = 0
-
-                    // Iterate through all records
-                    for (recordSnapshot in snapshot.children) {
+                    snapshot.children.forEach { recordSnapshot ->
                         val record = recordSnapshot.getValue(StrengthRecord::class.java)
                         if (record != null) {
                             totalRepetitions += record.repetitions
                             totalDuration += record.duration
                             numberOfRecords++
-
-                            // Track highest 1-rep max and bestRep
                             if (record.oneRepMax > highestOneRepMax) {
                                 highestOneRepMax = record.oneRepMax
                                 weightUnit = record.unit
                                 bestRep = record.repetitions
                             }
-
-                            // Determine highest strength level
-                            val currentStrengthLevelValue =
-                                strengthLevelHierarchy[record.strengthLevel] ?: 1
+                            val currentStrengthLevelValue = strengthLevelHierarchy[record.strengthLevel] ?: 1
                             if (currentStrengthLevelValue > highestStrengthLevelValue) {
                                 highestStrengthLevelValue = currentStrengthLevelValue
                                 highestStrengthLevel = record.strengthLevel
                             }
                         }
                     }
-
-                    // Return collected stats
+                    Log.d("StrengthRecordHelper", "Aggregated home data: totalReps=$totalRepetitions")
                     onSuccess(
                         totalRepetitions,
                         totalDuration,
@@ -139,15 +138,23 @@ class StrengthRecordHelper {
                         weightUnit
                     )
                 } else {
-                    // No records found
+                    Log.d("StrengthRecordHelper", "No records found; returning defaults.")
                     onSuccess(0, 0L, "Unknown", 0, 0, 0.0, 0)
                 }
             }
-            .addOnFailureListener { e ->
-                onFailure(Exception("Failed to fetch records: ${e.message}"))
+
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("StrengthRecordHelper", "Error fetching home data: ${error.message}")
+                // Return default values to avoid blocking UI (e.g., splash screen)
+                onSuccess(0, 0L, "Unknown", 0, 0, 0.0, 0)
             }
+        })
     }
 
+    /**
+     * Fetches weekly strength data.
+     * Returns a sorted list of pairs, where each pair is (week, highest strength level).
+     */
     fun fetchWeeklyStrengthData(
         onSuccess: (List<Pair<String, String>>) -> Unit,
         onFailure: (Exception) -> Unit
@@ -158,85 +165,71 @@ class StrengthRecordHelper {
         }
 
         val recordsRef = database.getReference("users/$userId/records")
-
+        // Using .get() here; note that this returns a Task snapshot (which should work offline if cached)
         recordsRef.get().addOnSuccessListener { snapshot ->
-            Log.d("StrengthRecordHelper", "Snapshot exists: ${snapshot.exists()}, Children count: ${snapshot.childrenCount}")
-
+            Log.d("StrengthRecordHelper", "Snapshot exists: ${snapshot.exists()}, children: ${snapshot.childrenCount}")
             val weeklyData = mutableMapOf<String, String>()
-            val currentMonth = getCurrentMonth() // Get the current month in "YYYY-MM"
+            val currentMonth = getCurrentMonth()
 
             snapshot.children.forEach { recordSnapshot ->
                 val dateKey = recordSnapshot.child("date").getValue(String::class.java) ?: return@forEach
-                Log.d("StrengthRecordHelper", "Record Date: $dateKey")
-
-                // Ensure the record belongs to the current month
                 if (!dateKey.startsWith(currentMonth)) return@forEach
 
                 val strengthLevelStr = recordSnapshot.child("strengthLevel").getValue(String::class.java) ?: "Unknown"
-                Log.d("StrengthRecordHelper", "Strength Level: $strengthLevelStr")
-
                 val strengthLevelValue = strengthLevelHierarchy[strengthLevelStr] ?: 0
                 val weekNumber = getWeekNumber(dateKey)
 
-                // Compare and store the highest strength level per week
+                // Store the highest strength level per week
                 val currentMax = strengthLevelHierarchy[weeklyData[weekNumber]] ?: 0
                 if (strengthLevelValue > currentMax) {
                     weeklyData[weekNumber] = strengthLevelStr
                 }
             }
 
-            // Convert map to sorted list
             val sortedWeeklyData = weeklyData.toList().sortedBy { it.first }
             Log.d("StrengthRecordHelper", "Final weekly data: $sortedWeeklyData")
             onSuccess(sortedWeeklyData)
-
         }.addOnFailureListener { e ->
             onFailure(e)
         }
     }
 
-
+    /**
+     * Returns the current month as a string in "YYYY-MM" format.
+     */
     fun getCurrentMonth(): String {
         val calendar = Calendar.getInstance()
         val year = calendar.get(Calendar.YEAR)
-        val month = calendar.get(Calendar.MONTH) + 1 // Month is 0-based in Calendar
+        val month = calendar.get(Calendar.MONTH) + 1 // Month is 0-based
         return String.format("%04d-%02d", year, month)
     }
 
-
-
-    // Helper function to get week number from a date string
+    /**
+     * Calculates the week number for a given date string ("yyyy-MM-dd").
+     * Returns a string in the format "Week X".
+     */
     fun getWeekNumber(dateStr: String): String {
         val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         val date = dateFormat.parse(dateStr) ?: return "Unknown"
-
-        val calendar = Calendar.getInstance().apply {
-            time = date
-        }
-
-        // Get the first Sunday of the month
+        val calendar = Calendar.getInstance().apply { time = date }
+        // Find the first Sunday of the month
         val firstDayCalendar = Calendar.getInstance().apply {
             set(Calendar.YEAR, calendar.get(Calendar.YEAR))
             set(Calendar.MONTH, calendar.get(Calendar.MONTH))
             set(Calendar.DAY_OF_MONTH, 1)
-
-            // Move to the first Sunday of the month
             while (get(Calendar.DAY_OF_WEEK) != Calendar.SUNDAY) {
                 add(Calendar.DAY_OF_MONTH, 1)
             }
         }
-
         val firstSunday = firstDayCalendar.timeInMillis
         val daysSinceFirstSunday = ((date.time - firstSunday) / (1000 * 60 * 60 * 24)).toInt()
         val weekNumber = (daysSinceFirstSunday / 7) + 1
-
         return "Week $weekNumber"
     }
 
-
-
-
-
+    /**
+     * Fetches records for a specific date (formatted as "yyyy-MM-dd").
+     */
     fun fetchRecordsByDate(
         selectedDate: String,
         onSuccess: (List<StrengthRecord>) -> Unit,
@@ -246,27 +239,43 @@ class StrengthRecordHelper {
             onFailure(Exception("User not authenticated"))
             return
         }
-
         val recordsRef = database.getReference("users/$userId/records")
         val query = recordsRef.orderByChild("date").equalTo(selectedDate)
-
         query.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val recordsList = mutableListOf<StrengthRecord>()
-
                 if (snapshot.exists()) {
-                    for (recordSnapshot in snapshot.children) {
-                        val record = recordSnapshot.getValue(StrengthRecord::class.java)
-                        record?.let { recordsList.add(it) }
+                    snapshot.children.forEach { recordSnapshot ->
+                        recordSnapshot.getValue(StrengthRecord::class.java)?.let { recordsList.add(it) }
                     }
                 }
-
                 onSuccess(recordsList)
             }
-
             override fun onCancelled(error: DatabaseError) {
                 onFailure(Exception("Failed to fetch records: ${error.message}"))
             }
+        })
+    }
+
+    /**
+     * Fetches records for a specific day (in UTC) given the year, month, and day.
+     */
+    fun getRecordsForDay(year: Int, month: Int, day: Int, onSuccess: (List<StrengthRecord>) -> Unit) {
+        val dayString = String.format("%04d-%02d-%02d", year, month + 1, day)
+        Log.d("FirebaseDebug", "Converted day string: $dayString")
+        val recordsList = mutableListOf<StrengthRecord>()
+        Log.d("FirebaseDebug", "Fetching records for day $dayString for user ID: ${auth.currentUser?.uid}")
+        fetchRecordsByDate(dayString, { records ->
+            records.forEach { record ->
+                Log.d("FirebaseDebug", "Record date: ${record.date}")
+                if (record.date == dayString) {
+                    Log.d("FirebaseDebug", "Record date matches: ${record.date}")
+                    recordsList.add(record)
+                }
+            }
+            onSuccess(recordsList)
+        }, { error ->
+            Log.e("FirebaseDebug", "Error fetching records for day: ${error.message}")
         })
     }
 
@@ -306,33 +315,4 @@ class StrengthRecordHelper {
 //            Log.e("FirebaseDebug", "Error fetching records for month: ${error.message}")
 //        })
     }
-
-    // Fetch records for a specific day (in UTC)
-    fun getRecordsForDay(year: Int, month: Int, day: Int, onSuccess: (List<StrengthRecord>) -> Unit) {
-        // Convert the year, month, and day to a string in the format "yyyy-MM-dd"
-        val dayString = String.format("%04d-%02d-%02d", year, month + 1, day) // e.g., "2025-03-06"
-
-        // Log the converted day string
-        Log.d("FirebaseDebug", "Converted day string: $dayString")
-
-        val recordsList = mutableListOf<StrengthRecord>()
-        Log.d("FirebaseDebug", "Fetching records for day $dayString for user ID: ${auth.currentUser?.uid}")
-
-        // Fetch records for the specific day using fetchRecordsByDate
-        fetchRecordsByDate(dayString, { records ->
-            records.forEach { record ->
-                // Log the record's date and check if it matches the dayString (e.g., "2025-03-06")
-                Log.d("FirebaseDebug", "Record date: ${record.date}")
-                if (record.date == dayString) {
-                    Log.d("FirebaseDebug", "Record date matches the day string: ${record.date}")
-                    recordsList.add(record)
-                }
-            }
-            onSuccess(recordsList)
-        }, { error ->
-            Log.e("FirebaseDebug", "Error fetching records for day: ${error.message}")
-        })
-    }
-
-
 }

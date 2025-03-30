@@ -65,7 +65,7 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
     private var exerciseStartTime: Long = 0L
     private var exerciseTimer: Timer? = null
     private var lastSpeechTime = 0L
-    private val SPEECH_COOLDOWN = 1500 // 3 seconds between announcements
+    private val SPEECH_COOLDOWN = 1000 // 3 seconds between announcements
     private var currentFeedback = ""
     private var isSpeechPending = false
     private val handler = Handler(Looper.getMainLooper())
@@ -163,8 +163,8 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
             setUpCamera()
         }
         Handler(Looper.getMainLooper()).postDelayed({
-            ttsHelper.speakText("Please stand within the camera’s view, making sure your whole body is visible on the screen for a better result. Adjust your position if needed before we begin.")
-
+            //ttsHelper.speakText("Please stand within the camera’s view, making sure your whole body is visible on the screen for a better result. Adjust your position if needed before we begin.")
+            ttsHelper.speakText("Please stand within the camera’s view")
 //            startCountdownTimer()
         }, 1000)
 
@@ -216,8 +216,8 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
 
             val distanceValue = distance.toFloatOrNull()
             // Define your acceptable distance range (in centimeters)
-            val MIN_DISTANCE = 70f
-            val MAX_DISTANCE = 120f
+            val MIN_DISTANCE = 0.8f
+            val MAX_DISTANCE = 1.0f
 
             if (distanceValue != null && !validDistanceReached) {
                 if (distanceValue in MIN_DISTANCE..MAX_DISTANCE ) {
@@ -369,14 +369,14 @@ class ExerciseActivity : AppCompatActivity(), PoseLandmarkerHelper.LandmarkerLis
         binding.countdownTimer.visibility = View.VISIBLE
 //        ttsHelper.speakText("Please stand in view so your whole body is visible. Adjust your position if needed.")
 
-        object : CountDownTimer(30000, 1000) {
+        object : CountDownTimer(10000, 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 val secondsRemaining = millisUntilFinished / 1000
                 binding.countdownTimer.text = "$secondsRemaining s"
 
-                if (secondsRemaining == 10L) {
-                    ttsHelper.speakText("Ready in ten seconds")
-                }
+//                if (secondsRemaining == 10L) {
+//                    ttsHelper.speakText("Ready in ten seconds")
+//                }
                 if (secondsRemaining == 2L) {
                     ttsHelper.speakText("Ready in three! two! one! Go!")
                 }

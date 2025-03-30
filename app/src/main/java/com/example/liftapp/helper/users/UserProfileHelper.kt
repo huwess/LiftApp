@@ -53,7 +53,7 @@ class UserProfileHelper {
 
         val userId = currentUser.uid
         Log.d("UserProfileHelper", "Fetching data for userId: $userId")
-
+        usersRef.child(userId).keepSynced(true) // Cache user data offline
         usersRef.child(userId).addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 if (snapshot.exists()) {
