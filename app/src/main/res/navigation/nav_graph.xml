@@ -4,7 +4,7 @@
     android:id="@+id/nav_graph">
     <fragment
         android:id="@+id/homeFragment"
-        android:name="com.example.liftapp.bottom_nav.HomeFragment"
+        android:name="com.bigbadbooks.liftapp.bottom_nav.HomeFragment"
         android:label="Home">
         <action
             android:id="@+id/action_homeFragment_to_calendarFragment"
@@ -13,6 +13,6 @@
 
     <fragment
         android:id="@+id/calendarFragment"
-        android:name="com.example.liftapp.calendar.CalendarFragment"
+        android:name="com.bigbadbooks.liftapp.calendar.CalendarFragment"
         android:label="Calendar" />
 </navigation>

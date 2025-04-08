@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.liftapp"
+    namespace = "com.bigbadbooks.liftapp"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.liftapp"
+        applicationId = "com.bigbadbooks.liftapp"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
