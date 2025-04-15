@@ -52,7 +52,7 @@ class DumbbellPressEvaluator : ExerciseEvaluator {
             1
         }
 
-        if (leftShoulderAngle < 70 && rightShoulderAngle < 70) {
+        if (leftShoulderAngle < 80 && rightShoulderAngle < 80) {
             // Transition to "down" only if not already in "down"
             if (stage != "down") {
                 val now = System.currentTimeMillis()
@@ -115,10 +115,10 @@ class DumbbellPressEvaluator : ExerciseEvaluator {
         } else {
 
 
-            if((leftShoulderAngle < 70) && (rightShoulderAngle < 70)) {
+            if((leftShoulderAngle < 80) && (rightShoulderAngle < 80)) {
 
 
-                if(stage == "down" && (leftEMDistance > 420 || rightEMDistance > 420)) {
+                if(stage == "down" && (leftEMDistance > 250 || rightEMDistance > 250)) {
 
                         feedback = "Elbows too far out"
 

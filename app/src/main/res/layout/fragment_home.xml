@@ -446,7 +446,7 @@
                             android:layout_width="0dp"
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
-                            android:text="Repititions"
+                            android:text="Repetitions"
                             android:gravity="end"
                             android:textColor="@color/gray"/>
                     </LinearLayout>

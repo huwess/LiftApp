@@ -4,15 +4,15 @@
     "type": "APK",
     "kind": "Directory"
   },
-  "applicationId": "com.example.liftapp",
+  "applicationId": "com.bigbadbooks.liftapp",
   "variantName": "release",
   "elements": [
     {
       "type": "SINGLE",
       "filters": [],
       "attributes": [],
-      "versionCode": 1,
-      "versionName": "1.0",
+      "versionCode": 5,
+      "versionName": "1.0.4",
       "outputFile": "app-release.apk"
     }
   ],
